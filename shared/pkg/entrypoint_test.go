@@ -15,6 +15,70 @@ import (
 	"gorm.io/gorm"
 )
 
+// Struct para acumular métricas globais
+type MetricasExecucao struct {
+	Tempos       []int64
+	TotalItems   int
+	TotalQueries int
+	mu           sync.Mutex
+}
+
+func (m *MetricasExecucao) Registrar(tempos []int64, totalItems, totalQueries int) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.Tempos = append(m.Tempos, tempos...)
+	m.TotalItems += totalItems
+	m.TotalQueries += totalQueries
+}
+
+func (m *MetricasExecucao) CalcularMetricas(logPrefix string) {
+	if m.TotalQueries == 0 || len(m.Tempos) == 0 {
+		fmt.Printf("[MÉTRICA GLOBAL] %s: nenhuma consulta registrada\n", logPrefix)
+		return
+	}
+	best, worst := m.Tempos[0], m.Tempos[0]
+	for _, t := range m.Tempos {
+		if t < best {
+			best = t
+		}
+		if t > worst {
+			worst = t
+		}
+	}
+	sorted := make([]int64, len(m.Tempos))
+	copy(sorted, m.Tempos)
+	for i := 0; i < len(sorted)-1; i++ {
+		for j := i + 1; j < len(sorted); j++ {
+			if sorted[i] > sorted[j] {
+				sorted[i], sorted[j] = sorted[j], sorted[i]
+			}
+		}
+	}
+	p := func(percent float64) int64 {
+		idx := int(float64(len(sorted)) * percent)
+		if idx >= len(sorted) {
+			idx = len(sorted) - 1
+		}
+		return sorted[idx]
+	}
+	fmt.Printf("[MÉTRICA GLOBAL] %s: %d consultas, %d itens exportados, tempo total %d ms, média %.2f ms, melhor %d ms, pior %d ms, p90 %d ms, p95 %d ms, p99 %d ms\n",
+		logPrefix, m.TotalQueries, m.TotalItems, soma(m.Tempos), float64(soma(m.Tempos))/float64(m.TotalQueries), best, worst, p(0.90), p(0.95), p(0.99))
+}
+
+func soma(arr []int64) int64 {
+	var s int64
+	for _, v := range arr {
+		s += v
+	}
+	return s
+}
+
+var metricasGlobal = &MetricasExecucao{}
+
+func GetMetricasGlobal() *MetricasExecucao {
+	return metricasGlobal
+}
+
 func tipoCategoria(db *gorm.DB) {
 
 	//Preencher TipoCategoria
@@ -445,27 +509,6 @@ func associarRamosESubramosAosApps(db *gorm.DB) {
 	}
 }
 
-func gerarJsonAppsPorRegiao(db *gorm.DB) error {
-	consultaVersaoApp := func(db *gorm.DB, regiaoID, modeloID, integracaoID int64) ([]map[string]interface{}, error) {
-		var result []map[string]interface{}
-		err := db.Table("versao_app").
-			Select(`app.nome as nome_app, versao_app.tamanho, mdl_trml.nome as modelo_terminal_nome, tip_int.nome as tipo_integracao_nome, est_cat.nome as estagio_nome, versao_app.id as id_versao`).
-			Joins("JOIN cat_app ON cat_app.id_versao_aplicativo = versao_app.id").
-			Joins("JOIN app ON app.id = cat_app.id_app").
-			Joins("JOIN mdl_trml ON mdl_trml.id = cat_app.id_modelo_terminal").
-			Joins("JOIN tip_int ON tip_int.id = cat_app.id_tipo_integracao").
-			Joins("JOIN est_cat ON est_cat.id = cat_app.id_estagio").
-			Joins("JOIN app_cat ON app_cat.id_app = cat_app.id_app").
-			Where("app_cat.id_categoria = ?", regiaoID).
-			Where("cat_app.id_modelo_terminal = ?", modeloID).
-			Where("cat_app.id_tipo_integracao = ?", integracaoID).
-			Order("cat_app.id_estagio, versao_app.created_at DESC").
-			Scan(&result).Error
-		return result, err
-	}
-	return gerarJsonAppsGenerico(db, consultaVersaoApp, "apps_regiao_%s_%s_%s.json", "gerarJsonAppsPorRegiao")
-}
-
 // Popula os estágios do aplicativo no banco
 func popularEstagiosCatalogo(db *gorm.DB) {
 	estagios := []domain.EstagioCatalogo{
@@ -525,26 +568,51 @@ func popularCatalogoPorEsteira(db *gorm.DB) {
 	}
 }
 
+func gerarJsonAppsPorRegiao(db *gorm.DB) error {
+	consultaVersaoApp := func(db *gorm.DB, regiaoID, modeloID, integracaoID int64) ([]map[string]interface{}, error) {
+		var result []map[string]interface{}
+		err := db.Table("versao_app").
+			Select(`versao_app.nome as nome_app, versao_app.tamanho, mdl_trml.nome as modelo_terminal_nome, tip_int.nome as tipo_integracao_nome, cat.nome as categoria_nome, versao_app.id as id_versao`).
+			Joins("JOIN cat_app ON cat_app.id_versao_aplicativo = versao_app.id").
+			Joins("JOIN cfg ON cfg.id = versao_app.id_configuracao").
+			Joins("JOIN app ON app.id = cfg.id_app").
+			Joins("JOIN app_cat ON app_cat.id_app = app.id").
+			Joins("JOIN cat ON cat.id = app_cat.id_categoria").
+			Joins("JOIN mdl_trml ON mdl_trml.id = cfg.id_modelo_terminal").
+			Joins("JOIN tip_int ON tip_int.id = cfg.id_tipo_integracao").
+			Where("cfg.id_modelo_terminal = ?", modeloID).
+			Where("cfg.id_tipo_integracao = ?", integracaoID).
+			Where("app_cat.id_categoria = ?", regiaoID).
+			Order("versao_app.created_at DESC").
+			Scan(&result).Error
+		return result, err
+	}
+	metricas := GetMetricasGlobal()
+	return gerarJsonAppsGenerico(db, consultaVersaoApp, "apps_regiao_%s_%s_%s.json", "gerarJsonAppsPorRegiao", metricas)
+}
+
 // Exporta apps por região usando CatalogoAplicativo
 func gerarJsonAppsPorRegiaoCatalogo(db *gorm.DB) error {
 	consultaCatalogoApp := func(db *gorm.DB, regiaoID, modeloID, integracaoID int64) ([]map[string]interface{}, error) {
 		var result []map[string]interface{}
 		err := db.Table("cat_app").
-			Select(`app.nome as nome_app, versao_app.tamanho, mdl_trml.nome as modelo_terminal_nome, tip_int.nome as tipo_integracao_nome, est_cat.nome as estagio_nome, versao_app.id as id_versao`).
+			Select(`versao_app.nome as nome_app, versao_app.tamanho, mdl_trml.nome as modelo_terminal_nome, tip_int.nome as tipo_integracao_nome, cat.nome as categoria_nome, versao_app.id as id_versao`).
 			Joins("JOIN versao_app ON versao_app.id = cat_app.id_versao_aplicativo").
 			Joins("JOIN app ON app.id = cat_app.id_app").
+			Joins("JOIN app_cat ON app_cat.id_app = cat_app.id_app").
+			Joins("JOIN cat ON cat.id = app_cat.id_categoria").
 			Joins("JOIN mdl_trml ON mdl_trml.id = cat_app.id_modelo_terminal").
 			Joins("JOIN tip_int ON tip_int.id = cat_app.id_tipo_integracao").
 			Joins("JOIN est_cat ON est_cat.id = cat_app.id_estagio").
-			Joins("JOIN app_cat ON app_cat.id_app = cat_app.id_app").
-			Where("app_cat.id_categoria = ?", regiaoID).
 			Where("cat_app.id_modelo_terminal = ?", modeloID).
 			Where("cat_app.id_tipo_integracao = ?", integracaoID).
+			Where("app_cat.id_categoria = ?", regiaoID).
 			Order("cat_app.id_estagio, versao_app.created_at DESC").
 			Scan(&result).Error
 		return result, err
 	}
-	return gerarJsonAppsGenerico(db, consultaCatalogoApp, "apps_regiao_catalogo_%s_%s_%s.json", "gerarJsonAppsPorRegiaoCatalogo")
+	metricas := GetMetricasGlobal()
+	return gerarJsonAppsGenerico(db, consultaCatalogoApp, "apps_regiao_catalogo_%s_%s_%s.json", "gerarJsonAppsPorRegiaoCatalogo", metricas)
 }
 
 // Função genérica para exportar apps por região, modelo e integração
@@ -553,6 +621,7 @@ func gerarJsonAppsGenerico(
 	consulta func(db *gorm.DB, regiaoID, modeloID, integracaoID int64) ([]map[string]interface{}, error),
 	fileNameFmt string,
 	logPrefix string,
+	metricas *MetricasExecucao,
 ) error {
 	var idsRegioes []int64
 	db.Model(&domain.Categoria{}).
@@ -565,7 +634,6 @@ func gerarJsonAppsGenerico(
 	var integracoes []domain.TipoIntegracao
 	db.Find(&integracoes)
 
-	var totalTime int64
 	var totalItems int
 	var totalQueries int
 	times := make([]int64, 0)
@@ -591,7 +659,6 @@ func gerarJsonAppsGenerico(
 					return err
 				}
 				duracao := time.Since(start).Milliseconds()
-				totalTime += duracao
 				totalItems += len(apps)
 				totalQueries++
 				times = append(times, duracao)
@@ -599,34 +666,8 @@ func gerarJsonAppsGenerico(
 			}
 		}
 	}
-	if totalQueries > 0 {
-		best, worst := times[0], times[0]
-		for _, t := range times {
-			if t < best {
-				best = t
-			}
-			if t > worst {
-				worst = t
-			}
-		}
-		sorted := make([]int64, len(times))
-		copy(sorted, times)
-		for i := 0; i < len(sorted)-1; i++ {
-			for j := i + 1; j < len(sorted); j++ {
-				if sorted[i] > sorted[j] {
-					sorted[i], sorted[j] = sorted[j], sorted[i]
-				}
-			}
-		}
-		p := func(percent float64) int64 {
-			idx := int(float64(len(sorted)) * percent)
-			if idx >= len(sorted) {
-				idx = len(sorted) - 1
-			}
-			return sorted[idx]
-		}
-		fmt.Printf("[MÉTRICA] %s: %d consultas, %d itens exportados, tempo total %d ms, média %.2f ms, melhor %d ms, pior %d ms, p90 %d ms, p95 %d ms, p99 %d ms\n",
-			logPrefix, totalQueries, totalItems, totalTime, float64(totalTime)/float64(totalQueries), best, worst, p(0.90), p(0.95), p(0.99))
+	if metricas != nil {
+		metricas.Registrar(times, totalItems, totalQueries)
 	}
 	return nil
 }
@@ -652,15 +693,17 @@ func TestEntrypoint(t *testing.T) {
 	//gerarJsonAppsPorRegiaoCatalogo(db)
 
 	var wg sync.WaitGroup
+	metricasGlobal = &MetricasExecucao{} // resetar métricas
 	for i := 0; i < 10; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			for j := 0; j < 20; j++ {
-				gerarJsonAppsPorRegiao(db)
+				gerarJsonAppsPorRegiaoCatalogo(db)
 				time.Sleep(100 * time.Millisecond)
 			}
 		}()
 	}
 	wg.Wait()
+	metricasGlobal.CalcularMetricas("gerarJsonAppsPorRegiao")
 }
