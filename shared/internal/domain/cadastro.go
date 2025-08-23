@@ -53,19 +53,16 @@ type VersaoAplicativo struct {
 // Tabela de estágios de publicação/configuração
 type EstagioCatalogo struct {
 	BaseEntity
-	Nome                string `gorm:"size:50;unique;not null"`
-	Descricao           string `gorm:"size:255"`
-	Ativo               bool
 	CatalogosAplicativo []CatalogoAplicativo `gorm:"foreignKey:IdEstagio"`
 }
 
 // Tabela catálogo aplicativo
 type CatalogoAplicativo struct {
 	BaseModel
-	IdApp              int64            `gorm:"not null;index"`                                    // FK para Aplicativo
 	IdTipoIntegracao   int64            `gorm:"not null;index;index:idx_catapp_unique,priority:1"` // FK para TipoIntegracao
 	IdModeloTerminal   int64            `gorm:"not null;index;index:idx_catapp_unique,priority:2"` // FK para ModeloTerminal
 	IdEstagio          int64            `gorm:"not null;index;index:idx_catapp_unique,priority:3"` // FK para EstagioCatalogo
+	IdApp              int64            `gorm:"not null;index;index:idx_catapp_unique,priority:4"` // FK para Aplicativo
 	IdVersaoAplicativo int64            `gorm:"not null;index"`                                    // FK para VersaoAplicativo
 	VersaoAplicativo   VersaoAplicativo `gorm:"foreignKey:IdVersaoAplicativo"`
 	Estagio            EstagioCatalogo  `gorm:"foreignKey:IdEstagio"`

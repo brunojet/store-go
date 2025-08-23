@@ -49,6 +49,8 @@ func InitDB() (*gorm.DB, error) {
 		&domain.Cadastro{},
 		&domain.ConfiguracaoCadastro{},
 		&domain.VersaoAplicativo{},
+		&domain.EstagioCatalogo{},
+		&domain.CatalogoAplicativo{},
 	)
 
 	return db, nil
