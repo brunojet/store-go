@@ -6,6 +6,6 @@ import (
 )
 
 func main() {
-	pkg.HelloShared()
+	pkg.InitDBShared()
 	internal.HelloStore()
 }

@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	shared.HelloShared()
+	shared.InitDBShared()
 	backoffice.HelloBackoffice()
 	store.HelloStore()
 }
