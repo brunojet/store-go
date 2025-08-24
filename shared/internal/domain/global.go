@@ -59,7 +59,6 @@ type Anexo struct {
 	Armazenamento string `gorm:"size:256;not null"`
 	Caminho       string `gorm:"size:256;not null"`
 	Presente      bool   `gorm:"default:false"`
-	// (removida relação inversa para evitar geração de FK invertida)
 }
 
 func (Anexo) TableName() string { return "anexo" }
