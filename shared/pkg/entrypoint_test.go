@@ -7,10 +7,11 @@ import (
 	"math/rand"
 	"os"
 	"store-go/shared/internal"
-	"store-go/shared/internal/domain"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/brunojet/store-go/infra/pkg/domain"
 
 	"gorm.io/gorm"
 )
