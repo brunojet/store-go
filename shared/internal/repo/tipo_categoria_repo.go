@@ -3,7 +3,7 @@ package repo
 import (
 	"context"
 
-	"github.com/brunojet/store-go/infra/pkg/repo"
+	"github.com/brunojet/infra-go/pkg/repo"
 	"github.com/brunojet/store-go/shared/internal/domain"
 	"gorm.io/gorm"
 )

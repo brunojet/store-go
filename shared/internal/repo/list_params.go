@@ -1,6 +1,6 @@
 package repo
 
-import "github.com/brunojet/store-go/infra/pkg/repo"
+import "github.com/brunojet/infra-go/pkg/repo"
 
 type ListParams struct {
 	Page     int

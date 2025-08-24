@@ -1,6 +1,6 @@
 package domain
 
-import infra "github.com/brunojet/store-go/infra/pkg/domain"
+import infra "github.com/brunojet/infra-go/pkg/domain"
 
 type BaseModel = infra.BaseModel
 type BaseEntity = infra.BaseEntity
