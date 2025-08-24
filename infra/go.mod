@@ -1,6 +1,6 @@
 module github.com/brunojet/store-go/infra
 
-go 1.20
+go 1.23.4
 
 require gorm.io/gorm v1.30.1
 
