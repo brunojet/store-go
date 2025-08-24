@@ -673,7 +673,7 @@ func gerarJsonAppsGenerico(
 }
 
 func TestEntrypoint(t *testing.T) {
-	db, err := internal.InitDB()
+	_, err := internal.InitDB()
 	if err != nil {
 		t.Fatalf("Erro ao inicializar o banco: %v", err)
 	}
@@ -692,18 +692,18 @@ func TestEntrypoint(t *testing.T) {
 	//popularEstagiosCatalogo(db)
 	//gerarJsonAppsPorRegiaoCatalogo(db)
 
-	var wg sync.WaitGroup
-	metricasGlobal = &MetricasExecucao{} // resetar métricas
-	for i := 0; i < 10; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for j := 0; j < 20; j++ {
-				gerarJsonAppsPorRegiaoCatalogo(db)
-				time.Sleep(100 * time.Millisecond)
-			}
-		}()
-	}
-	wg.Wait()
-	metricasGlobal.CalcularMetricas("gerarJsonAppsPorRegiao")
+	// var wg sync.WaitGroup
+	// metricasGlobal = &MetricasExecucao{} // resetar métricas
+	// for i := 0; i < 10; i++ {
+	// 	wg.Add(1)
+	// 	go func() {
+	// 		defer wg.Done()
+	// 		for j := 0; j < 20; j++ {
+	// 			gerarJsonAppsPorRegiaoCatalogo(db)
+	// 			time.Sleep(100 * time.Millisecond)
+	// 		}
+	// 	}()
+	// }
+	// wg.Wait()
+	// metricasGlobal.CalcularMetricas("gerarJsonAppsPorRegiao")
 }

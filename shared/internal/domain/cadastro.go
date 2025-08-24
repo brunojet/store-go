@@ -1,3 +1,4 @@
+// Campo principal comentado para controle de ícone principal
 package domain
 
 type Aplicativo struct {
@@ -48,6 +49,8 @@ type VersaoAplicativo struct {
 	Configuracao   Configuracao `gorm:"foreignKey:IdConfiguracao"`
 	Tamanho        int64        `gorm:"column:tamanho;not null"`
 	NomeVersao     string       `gorm:"column:nome_versao;size:16;not null"`
+	IdImagem       int64        `gorm:"column:id_imagem;index"`
+	Imagem         *Imagem      `gorm:"foreignKey:IdImagem;references:ID"`
 }
 
 // Tabela de estágios de publicação/configuração
@@ -69,6 +72,12 @@ type CatalogoAplicativo struct {
 	Ativo              bool
 }
 
+type Imagem struct {
+	ID                int64              `gorm:"primaryKey;autoIncrement:false"` // PK sincronizado com Anexo
+	Anexo             *Anexo             `gorm:"foreignKey:ID;references:ID;constraint:OnDelete:RESTRICT;belongsTo"`
+	VersoesAplicativo []VersaoAplicativo `gorm:"foreignKey:IdImagem"`
+}
+
 func (Aplicativo) TableName() string           { return "app" }
 func (AppCategoria) TableName() string         { return "app_cat" }
 func (Configuracao) TableName() string         { return "cfg" }
@@ -77,3 +86,4 @@ func (ConfiguracaoCadastro) TableName() string { return "cfg_cad" }
 func (VersaoAplicativo) TableName() string     { return "versao_app" }
 func (EstagioCatalogo) TableName() string      { return "est_cat" }
 func (CatalogoAplicativo) TableName() string   { return "cat_app" }
+func (Imagem) TableName() string               { return "imagem" }

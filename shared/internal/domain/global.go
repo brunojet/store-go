@@ -49,3 +49,17 @@ func (c *Contato) BeforeCreate(tx *gorm.DB) (err error) {
 	}
 	return nil
 }
+
+type Anexo struct {
+	BaseModel
+	Nome          string `gorm:"size:128;not null"`
+	TipoMime      string `gorm:"size:64;not null"`
+	MD5           string `gorm:"size:32;not null"`
+	Tamanho       int64  `gorm:"not null"`
+	Armazenamento string `gorm:"size:256;not null"`
+	Caminho       string `gorm:"size:256;not null"`
+	Presente      bool   `gorm:"default:false"`
+	// (removida relação inversa para evitar geração de FK invertida)
+}
+
+func (Anexo) TableName() string { return "anexo" }
