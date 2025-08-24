@@ -7,5 +7,6 @@ import internal "github.com/brunojet/store-go/infra/internal/domain"
 
 type Anexo = internal.Anexo
 type BaseModel = internal.BaseModel
+type BaseEntity = internal.BaseEntity
 
 // TableName functions, methods, etc. are on the underlying types; aliasing preserves them.

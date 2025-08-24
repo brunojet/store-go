@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 
-	"store-go/shared/internal/domain"
+	"github.com/brunojet/store-go/infra/pkg/domain"
 )
 
 func InitDB() (*gorm.DB, error) {

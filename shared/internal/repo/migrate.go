@@ -5,7 +5,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"store-go/shared/internal/domain"
+	"github.com/brunojet/store-go/infra/pkg/domain"
 )
 
 // MigrateAll aplica AutoMigrate na ordem segura para evitar constraints invertidas.
@@ -16,9 +16,7 @@ func MigrateAll(db *gorm.DB) error {
 	if err := db.AutoMigrate(&domain.Anexo{}); err != nil {
 		return err
 	}
-	if err := db.AutoMigrate(&domain.Imagem{}); err != nil {
-		return err
-	}
+	// imagem is an application-level entity; do not AutoMigrate it from shared repo
 	if err := db.AutoMigrate(&domain.VersaoAplicativo{}); err != nil {
 		return err
 	}
