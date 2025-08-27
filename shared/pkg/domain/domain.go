@@ -6,26 +6,24 @@ package domain
 
 import id "github.com/brunojet/store-go/shared/internal/domain"
 
-type Categoria = id.Categoria
+// Exportação das principais entidades para uso externo
 type TipoCategoria = id.TipoCategoria
+type Categoria = id.Categoria
 type TipoIntegracao = id.TipoIntegracao
 type ModeloTerminal = id.ModeloTerminal
-type Aplicativo = id.Aplicativo
-type AppCategoria = id.AppCategoria
-type Configuracao = id.Configuracao
-type Contato = id.Contato
 type Imagem = id.Imagem
-type Estagio = id.Estagio
+type Contato = id.Contato
+type Aplicativo = id.Aplicativo
+type DetalhesAplicativo = id.DetalhesAplicativo
+type ImagemDetalhe = id.ImagemDetalhe
+type Configuracao = id.Configuracao
 type VersaoAplicativo = id.VersaoAplicativo
 type Cadastro = id.Cadastro
 type ConfiguracaoCadastro = id.ConfiguracaoCadastro
+type AppCategoria = id.AppCategoria
+type Estagio = id.Estagio
 type CatalogoAplicativo = id.CatalogoAplicativo
 
-// Lista de entidades para AutoMigrate, na ordem do arquivo
-// Ordem correta para AutoMigrate, respeitando dependências entre entidades
-// 1. Bases sem dependências
-// 2. Entidades dependentes
-// 3. Entidades com múltiplas FKs
 var EntidadesAutoMigrate = []interface{}{
 	&TipoCategoria{},        // base para Categoria
 	&Categoria{},            // depende de TipoCategoria
@@ -34,6 +32,8 @@ var EntidadesAutoMigrate = []interface{}{
 	&Imagem{},               // base para VersaoAplicativo
 	&Contato{},              // base para Cadastro
 	&Aplicativo{},           // base para AppCategoria, Configuracao, Cadastro, CatalogoAplicativo
+	&DetalhesAplicativo{},   // pode ser compartilhado entre vários cadastros
+	&ImagemDetalhe{},        // vincula imagens reutilizáveis a detalhes do aplicativo
 	&Configuracao{},         // depende de TipoIntegracao, ModeloTerminal, Aplicativo
 	&VersaoAplicativo{},     // depende de Configuracao, Imagem
 	&Cadastro{},             // depende de Aplicativo, Contato, DetalhesAplicativo
