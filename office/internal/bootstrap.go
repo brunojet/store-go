@@ -15,9 +15,11 @@ func Bootstrap() (*service.CategoriaService, *service.TipoCategoriaService, erro
 	if err != nil {
 		return nil, nil, err
 	}
-	// run minimal AutoMigrate for the types we will use
-	if err := db.AutoMigrate(&domain.TipoCategoria{}, &domain.Categoria{}); err != nil {
-		return nil, nil, err
+	// Executa AutoMigrate em loop para cada entidade
+	for _, entidade := range domain.EntidadesAutoMigrate {
+		if err := db.AutoMigrate(entidade); err != nil {
+			return nil, nil, err
+		}
 	}
 
 	// construct repositories using shared public constructors

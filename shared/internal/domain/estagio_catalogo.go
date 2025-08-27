@@ -1,8 +1,8 @@
 package domain
 
-type EstagioCatalogo struct {
+type Estagio struct {
 	BaseEntity
 	CatalogosAplicativo []CatalogoAplicativo `gorm:"foreignKey:IdEstagio"`
 }
 
-func (EstagioCatalogo) TableName() string { return "est_cat" }
+func (Estagio) TableName() string { return "est_cat" }

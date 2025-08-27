@@ -2,32 +2,34 @@
 
 ```mermaid
 erDiagram
-    APP ||--o{ CFG : "possui"
-    CFG ||--o{ VERSAO_APP : "possui"
-    APP ||--o{ APP_CAT : "classificado"
-    APP_CAT }o--|| CAT : "categoria"
-    CFG }o--|| MODELO_TRML : "usa modelo"
-    CFG }o--|| TIPO_INT : "usa integração"
-    VERSAO_APP ||--o{ CAT_APP : "catalogado"
-    CAT_APP }o--|| APP : "referencia app"
-    CAT_APP }o--|| MODELO_TRML : "modelo catálogo"
-    CAT_APP }o--|| TIPO_INT : "integração catálogo"
-    CAT_APP }o--|| EST_CAT : "estágio catálogo"
-    CAT_APP }o--|| VERSAO_APP : "versão catálogo"
-    CAT ||--o{ TIPO_CAT : "tipo"
-    EST_CAT ||--o{ CAT_APP : "usado em"
+	APP ||--o{ CADASTRO : "tem cadastro"
+	CADASTRO }o--|| CONTATO : "contato principal"
+	CADASTRO }o--|| DETALHES_APLICATIVO : "detalhes"
+	CADASTRO ||--o{ CONFIGURACAO_CADASTRO : "configurações"
+	APP ||--o{ VERSAO_APP : "versões"
+	VERSAO_APP ||--o{ CATALOGO_APLICATIVO : "catalogado"
+	CATALOGO_APLICATIVO }o--|| ESTAGIO_CATALOGO : "estágio"
+	CATALOGO_APLICATIVO }o--|| VERSAO_APP : "versão"
+	CATALOGO_APLICATIVO }o--|| DETALHES_APLICATIVO : "detalhes ativos"
+	CATALOGO_APLICATIVO }o--|| SCREENSHOT : "screenshots ativos"
+	CAT ||--o{ APP_CAT : "classificado"
+	APP_CAT }o--|| APP : "referencia app"
+	APP_CAT }o--|| CAT : "categoria"
+	// ...existing code...
 ```
 
 ## Legenda
 - APP: Aplicativo
-- CFG: Configuração
+- CADASTRO: Cadastro do Aplicativo
+- CONTATO: Contato principal do cadastro
+- DETALHES_APLICATIVO: Detalhes do aplicativo (conteúdos, n screenshots)
+- CONFIGURACAO_CADASTRO: Configurações do cadastro
 - VERSAO_APP: Versão do Aplicativo
+- CATALOGO_APLICATIVO: Controle de exposição/ativação por estágio
+- ESTAGIO_CATALOGO: Estágio do catálogo
+- SCREENSHOT: Imagens/screenshots do aplicativo
 - APP_CAT: Associação App-Categoria
 - CAT: Categoria
-- MODELO_TRML: Modelo de Terminal
-- TIPO_INT: Tipo de Integração
-- CAT_APP: Catálogo de Aplicativo
-- EST_CAT: Estágio do Catálogo
-- TIPO_CAT: Tipo de Categoria
+// ...existing code...
 
 > Diagrama gerado automaticamente por GitHub Copilot.
