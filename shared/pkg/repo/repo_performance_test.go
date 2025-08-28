@@ -608,6 +608,77 @@ func solicitarCadastroVersaoAplicativo(db *gorm.DB) error {
 	return nil
 }
 
+func solicitarPublicacaoVersaoAplicativo(db *gorm.DB) error {
+	var apps []domain.Aplicativo
+	if err := db.Find(&apps).Error; err != nil {
+		return err
+	}
+	var estagios []domain.Estagio
+	if err := db.Order("id ASC").Find(&estagios).Error; err != nil {
+		return err
+	}
+
+	for _, app := range apps {
+		var cadastro domain.Cadastro
+		if err := db.Where("id_app = ?", app.ID).Order("created_at desc").First(&cadastro).Error; err != nil || cadastro.ID == 0 {
+			continue
+		}
+
+		var configCadastros []domain.ConfiguracaoCadastro
+		if err := db.Where("id_cadastro = ?", cadastro.ID).Find(&configCadastros).Error; err != nil {
+			return err
+		}
+
+		for _, cfgCad := range configCadastros {
+			var versoesCatalogo []domain.CatalogoAplicativo
+			if err := db.Where("id_configuracao = ?", cfgCad.IdConfiguracao).Find(&versoesCatalogo).Error; err != nil {
+				return err
+			}
+			var versaoAtual domain.VersaoAplicativo
+			if err := db.Where("id_configuracao = ?", cfgCad.IdConfiguracao).Order("created_at desc").First(&versaoAtual).Error; err != nil || versaoAtual.ID == 0 {
+				continue
+			}
+
+			var catalogos []domain.CatalogoAplicativo
+
+			db.Where("id_configuracao = ?", cfgCad.IdConfiguracao).Order("id_estagio ASC").Find(&catalogos)
+
+			if len(catalogos) > 0 {
+				for i := len(catalogos) - 1; i >= 0; i-- {
+					catalogo := catalogos[i]
+					if i < len(estagios)-1 {
+						proximoEstagio := estagios[i+1]
+						novoCatalogo := domain.CatalogoAplicativo{
+							IdCadastro:         cadastro.ID,
+							IdConfiguracao:     catalogo.IdConfiguracao,
+							IdEstagio:          proximoEstagio.ID,
+							IdVersaoAplicativo: versaoAtual.ID,
+							Ativo:              true,
+						}
+						db.Create(&novoCatalogo)
+					}
+
+					// Atualiza o registro do estágio anterior com a nova versão
+					catalogo.IdVersaoAplicativo = versaoAtual.ID
+					db.Save(&catalogo)
+				}
+			} else {
+				novoCatalogo := domain.CatalogoAplicativo{
+					IdCadastro:         cadastro.ID,
+					IdConfiguracao:     cfgCad.IdConfiguracao,
+					IdEstagio:          estagios[0].ID,
+					IdVersaoAplicativo: versaoAtual.ID,
+					Ativo:              true,
+				}
+				db.Create(&novoCatalogo)
+			}
+			fmt.Printf("Versão mais atual para configuração %d: %v\n", cfgCad.IdConfiguracao, versaoAtual)
+		}
+	}
+
+	return nil
+}
+
 // Popula os estágios do aplicativo no banco
 func popularEstagiosCatalogo(db *gorm.DB) {
 	estagios := []domain.Estagio{
@@ -776,9 +847,11 @@ func TestEntrypoint(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Erro ao inicializar o banco: %v", err)
 	}
+	//popularEstagiosCatalogo(db)
 
-	solicitarCadastroAplicativo(db)
-	solicitarCadastroVersaoAplicativo(db)
+	// solicitarCadastroAplicativo(db)
+	// solicitarCadastroVersaoAplicativo(db)
+	solicitarPublicacaoVersaoAplicativo(db)
 
 	// for i := 0; i < 200; i++ {
 	// 	cadastrarVersaoApp(db)
@@ -789,7 +862,6 @@ func TestEntrypoint(t *testing.T) {
 	// categoriasSubRamo(db)
 	//associarRamosESubramosAosApps(db)
 	//gerarJsonAppsPorRegiao(db)
-	//popularEstagiosCatalogo(db)
 	//gerarJsonAppsPorRegiaoCatalogo(db)
 
 	// var wg sync.WaitGroup
