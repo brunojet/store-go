@@ -2,15 +2,14 @@ package domain
 
 type CatalogoAplicativo struct {
 	BaseModel
-	IdTipoIntegracao   int64            `gorm:"not null;index;index:idx_catapp_unique,priority:1"`
-	IdModeloTerminal   int64            `gorm:"not null;index;index:idx_catapp_unique,priority:2"`
-	IdEstagio          int64            `gorm:"not null;index;index:idx_catapp_unique,priority:3"`
-	IdApp              int64            `gorm:"not null;index;index:idx_catapp_unique,priority:4"`
+	IdConfiguracao     int64            `gorm:"not null;index;index:idx_catapp_unique,priority:0"`
+	Configuracao       Configuracao     `gorm:"foreignKey:IdConfiguracao"`
+	IdEstagio          int64            `gorm:"not null;index;index:idx_catapp_unique,priority:1"`
+	Estagio            Estagio          `gorm:"foreignKey:IdEstagio"`
 	IdCadastro         *int64           `gorm:"column:id_cadastro"`
 	Cadastro           Cadastro         `gorm:"foreignKey:IdCadastro"`
-	IdVersaoAplicativo int64            `gorm:"not null;index"`
+	IdVersaoAplicativo *int64           `gorm:"not null;index"`
 	VersaoAplicativo   VersaoAplicativo `gorm:"foreignKey:IdVersaoAplicativo"`
-	Estagio            Estagio          `gorm:"foreignKey:IdEstagio"`
 	Ativo              bool
 }
 
