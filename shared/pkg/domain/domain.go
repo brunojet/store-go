@@ -4,9 +4,15 @@ package domain
 // other modules (for example `office`) can depend on the domain without
 // importing internal packages directly.
 
-import id "github.com/brunojet/store-go/shared/internal/domain"
+import (
+	infra "github.com/brunojet/infra-go/pkg/domain"
+	id "github.com/brunojet/store-go/shared/internal/domain"
+)
 
 // Exportação das principais entidades para uso externo
+type BaseModel = infra.BaseModel
+type BaseEntity = infra.BaseEntity
+type Anexo = infra.Anexo
 type TipoCategoria = id.TipoCategoria
 type Categoria = id.Categoria
 type TipoIntegracao = id.TipoIntegracao
@@ -20,7 +26,7 @@ type Configuracao = id.Configuracao
 type VersaoAplicativo = id.VersaoAplicativo
 type Cadastro = id.Cadastro
 type ConfiguracaoCadastro = id.ConfiguracaoCadastro
-type AppCategoria = id.AppCategoria
+type CadastroCategoria = id.CadastroCategoria
 type Estagio = id.Estagio
 type CatalogoAplicativo = id.CatalogoAplicativo
 
@@ -38,7 +44,7 @@ var EntidadesAutoMigrate = []interface{}{
 	&VersaoAplicativo{},     // depende de Configuracao, Imagem
 	&Cadastro{},             // depende de Aplicativo, Contato, DetalhesAplicativo
 	&ConfiguracaoCadastro{}, // depende de Cadastro, Configuracao
-	&AppCategoria{},         // depende de Aplicativo, Categoria
+	&CadastroCategoria{},    // depende de Aplicativo, Categoria
 	&Estagio{},              // base para CatalogoAplicativo
 	&CatalogoAplicativo{},   // depende de TipoIntegracao, ModeloTerminal, Estagio, Aplicativo, VersaoAplicativo, Cadastro
 }

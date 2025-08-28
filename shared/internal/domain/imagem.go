@@ -1,8 +1,9 @@
 package domain
 
 type Imagem struct {
-	ID                int64              `gorm:"primaryKey;autoIncrement:false"` // PK sincronizado com Anexo
-	Anexo             *Anexo             `gorm:"foreignKey:ID;references:ID;constraint:OnDelete:RESTRICT;belongsTo"`
+	BaseModel
+	IdAnexo           int64              `gorm:"column:id_anexo"`
+	Anexo             Anexo              `gorm:"foreignKey:IdAnexo"`
 	VersoesAplicativo []VersaoAplicativo `gorm:"foreignKey:IdImagem"`
 }
 

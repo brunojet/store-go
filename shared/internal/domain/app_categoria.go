@@ -1,10 +1,11 @@
 package domain
 
-type AppCategoria struct {
+type CadastroCategoria struct {
 	BaseModel
-	IdApp       int64     `gorm:"column:id_app;not null;index"`
 	IdCategoria int64     `gorm:"column:id_categoria;not null;index"`
 	Categoria   Categoria `gorm:"foreignKey:IdCategoria"`
+	IdCadastro  int64     `gorm:"column:id_cadastro;not null;index"`
+	Cadastro    Cadastro  `gorm:"foreignKey:IdCadastro"`
 }
 
-func (AppCategoria) TableName() string { return "app_cat" }
+func (CadastroCategoria) TableName() string { return "cad_cat" }

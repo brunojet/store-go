@@ -6,9 +6,9 @@ type CatalogoAplicativo struct {
 	Configuracao       Configuracao     `gorm:"foreignKey:IdConfiguracao"`
 	IdEstagio          int64            `gorm:"not null;index;index:idx_catapp_unique,priority:1"`
 	Estagio            Estagio          `gorm:"foreignKey:IdEstagio"`
-	IdCadastro         *int64           `gorm:"column:id_cadastro"`
+	IdCadastro         int64            `gorm:"not null;column:id_cadastro"`
 	Cadastro           Cadastro         `gorm:"foreignKey:IdCadastro"`
-	IdVersaoAplicativo *int64           `gorm:"not null;index"`
+	IdVersaoAplicativo int64            `gorm:"not null;index"`
 	VersaoAplicativo   VersaoAplicativo `gorm:"foreignKey:IdVersaoAplicativo"`
 	Ativo              bool
 }

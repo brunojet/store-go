@@ -1,9 +1,11 @@
 package domain
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestAppCategoria_TableName(t *testing.T) {
-	var v AppCategoria
+	var v CadastroCategoria
 	if got := v.TableName(); got == "" {
 		t.Fatalf("TableName() returned empty string")
 	}
