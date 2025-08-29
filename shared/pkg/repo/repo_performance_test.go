@@ -641,38 +641,56 @@ func solicitarPublicacaoVersaoAplicativo(db *gorm.DB) error {
 
 			var catalogos []domain.CatalogoAplicativo
 
-			db.Where("id_configuracao = ?", cfgCad.IdConfiguracao).Order("id_estagio ASC").Find(&catalogos)
+			db.Preload("Estagio").Where("id_configuracao = ?", cfgCad.IdConfiguracao).Order("id_estagio DESC").Find(&catalogos)
 
-			if len(catalogos) > 0 {
-				for i := len(catalogos) - 1; i >= 0; i-- {
-					catalogo := catalogos[i]
-					if i < len(estagios)-1 {
-						proximoEstagio := estagios[i+1]
-						novoCatalogo := domain.CatalogoAplicativo{
-							IdCadastro:         cadastro.ID,
-							IdConfiguracao:     catalogo.IdConfiguracao,
-							IdEstagio:          proximoEstagio.ID,
-							IdVersaoAplicativo: versaoAtual.ID,
-							Ativo:              true,
-						}
-						db.Create(&novoCatalogo)
-					}
+			lenCatalogos := len(catalogos)
+			lenEstagios := len(estagios)
 
-					// Atualiza o registro do estágio anterior com a nova versão
-					catalogo.IdVersaoAplicativo = versaoAtual.ID
-					db.Save(&catalogo)
+			catalogoOffset := 0
+
+			if lenCatalogos < lenEstagios {
+				novoCatalogo := domain.CatalogoAplicativo{
+					IdCadastro:     cadastro.ID,
+					IdConfiguracao: cfgCad.IdConfiguracao,
+					Ativo:          true,
+				}
+
+				if lenCatalogos == 0 {
+					//Versao atual criada no primeiro estagio
+					novoCatalogo.IdEstagio = estagios[0].ID
+					novoCatalogo.IdVersaoAplicativo = versaoAtual.ID
+				} else {
+					//Versao mais recente criada no proximo estágio
+					novoCatalogo.IdEstagio = estagios[lenCatalogos].ID
+					novoCatalogo.IdVersaoAplicativo = catalogos[0].IdVersaoAplicativo
+					catalogoOffset++
+				}
+
+				if err := db.Create(&novoCatalogo).Error; err != nil {
+					return err
 				}
 			} else {
-				novoCatalogo := domain.CatalogoAplicativo{
-					IdCadastro:         cadastro.ID,
-					IdConfiguracao:     cfgCad.IdConfiguracao,
-					IdEstagio:          estagios[0].ID,
-					IdVersaoAplicativo: versaoAtual.ID,
-					Ativo:              true,
-				}
-				db.Create(&novoCatalogo)
+				catalogoOffset++
 			}
-			fmt.Printf("Versão mais atual para configuração %d: %v\n", cfgCad.IdConfiguracao, versaoAtual)
+
+			//Avanca as versoes de estagio e ativa a mais recente no estágio inicial
+			for i := catalogoOffset; lenCatalogos > 0 && i <= lenCatalogos; i++ {
+				var catalogoAvancado = domain.CatalogoAplicativo{}
+				if i < lenCatalogos {
+					anteriorOffset := i - 1
+					catalogoAvancado = catalogos[anteriorOffset]
+					catalogoAvancado.IdEstagio = catalogos[i].IdEstagio
+				} else {
+					//Versao mais recente ativada no primeiro estágio
+					anteriorOffset := lenCatalogos - 1
+					catalogoAvancado = catalogos[anteriorOffset]
+					catalogoAvancado.IdEstagio = estagios[0].ID
+					catalogoAvancado.IdVersaoAplicativo = versaoAtual.ID
+				}
+				if err := db.Save(&catalogoAvancado).Error; err != nil {
+					return err
+				}
+			}
 		}
 	}
 
