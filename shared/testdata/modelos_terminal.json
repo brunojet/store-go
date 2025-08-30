@@ -1,0 +1,14 @@
+[
+    {
+        "nome": "L400",
+        "ativo": true
+    },
+    {
+        "nome": "S350",
+        "ativo": true
+    },
+    {
+        "nome": "GPOS700",
+        "ativo": true
+    }
+]

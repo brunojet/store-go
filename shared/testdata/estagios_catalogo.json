@@ -1,0 +1,22 @@
+[
+  {
+    "nome": "Certificação",
+    "descricao": "App em processo de certificação técnica e funcional",
+    "ativo": true
+  },
+  {
+    "nome": "Revisão",
+    "descricao": "App em revisão de homologação e documentação",
+    "ativo": true
+  },
+  {
+    "nome": "Piloto",
+    "descricao": "App liberado para piloto controlado em campo",
+    "ativo": true
+  },
+  {
+    "nome": "Produção",
+    "descricao": "App disponível para uso em produção",
+    "ativo": true
+  }
+]

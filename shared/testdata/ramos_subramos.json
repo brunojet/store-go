@@ -1,0 +1,165 @@
+{
+    "tipo_categoria": "Ramos",
+    "categorias": {
+        "Varejo": {
+            "tipo_categoria": "Subramos",
+            "categorias": {
+                "Supermercado": {},
+                "Loja de Roupas": {},
+                "Papelaria": {},
+                "Perfumaria": {},
+                "Livraria": {},
+                "Magazine": {},
+                "E-commerce": {}
+            }
+        },
+        "Atacado": {
+            "tipo_categoria": "Subramos",
+            "categorias": {
+                "Distribuidora": {},
+                "Atacado de Alimentos": {},
+                "Atacado de Bebidas": {},
+                "Atacado de Limpeza": {},
+                "Atacado de Eletrônicos": {}
+            }
+        },
+        "Veículos": {
+            "tipo_categoria": "Subramos",
+            "categorias": {
+                "Concessionária": {},
+                "Autopeças": {},
+                "Oficina": {},
+                "Locadora": {},
+                "Revenda": {}
+            }
+        },
+        "Alimentação": {
+            "tipo_categoria": "Subramos",
+            "categorias": {
+                "Restaurante": {},
+                "Padaria": {},
+                "Lanchonete": {},
+                "Pizzaria": {},
+                "Cafeteria": {},
+                "Delivery": {},
+                "Fast Food": {}
+            }
+        },
+        "Saúde": {
+            "tipo_categoria": "Subramos",
+            "categorias": {
+                "Farmácia": {},
+                "Clínica": {},
+                "Laboratório": {},
+                "Ótica": {},
+                "Drogaria": {}
+            }
+        },
+        "Tecnologia": {
+            "tipo_categoria": "Subramos",
+            "categorias": {
+                "Software": {},
+                "Cloud": {},
+                "Streaming": {},
+                "Redes Sociais": {},
+                "Mensageria": {},
+                "Banco Digital": {},
+                "Marketplace": {},
+                "Aplicativo Móvel": {}
+            }
+        },
+        "Entretenimento": {
+            "tipo_categoria": "Subramos",
+            "categorias": {
+                "Cinema": {},
+                "Música": {},
+                "TV": {},
+                "Streaming": {},
+                "Jogos": {},
+                "Eventos": {},
+                "Shows": {}
+            }
+        },
+        "Educação": {
+            "tipo_categoria": "Subramos",
+            "categorias": {
+                "Cursos": {},
+                "Plataforma EAD": {},
+                "Idiomas": {},
+                "Faculdade": {},
+                "Aulas Online": {}
+            }
+        },
+        "Finanças": {
+            "tipo_categoria": "Subramos",
+            "categorias": {
+                "Banco Digital": {},
+                "Carteira Digital": {},
+                "Pagamentos": {},
+                "Investimentos": {},
+                "Seguros": {}
+            }
+        },
+        "Imóveis": {
+            "tipo_categoria": "Subramos",
+            "categorias": {
+                "Aluguel": {},
+                "Compra": {},
+                "Venda": {},
+                "Condomínio": {},
+                "Imobiliária": {}
+            }
+        },
+        "Transporte": {
+            "tipo_categoria": "Subramos",
+            "categorias": {
+                "Táxi": {},
+                "Carona": {},
+                "Mobilidade": {},
+                "Ônibus": {},
+                "Avião": {},
+                "Locadora": {}
+            }
+        },
+        "Comunicação": {
+            "tipo_categoria": "Subramos",
+            "categorias": {
+                "Mensageria": {},
+                "Redes Sociais": {},
+                "E-mail": {},
+                "Chamadas": {},
+                "Videoconferência": {}
+            }
+        },
+        "Utilidades": {
+            "tipo_categoria": "Subramos",
+            "categorias": {
+                "Armazenamento": {},
+                "Backup": {},
+                "Organização": {},
+                "Notas": {},
+                "Calendário": {}
+            }
+        },
+        "Compras": {
+            "tipo_categoria": "Subramos",
+            "categorias": {
+                "Marketplace": {},
+                "E-commerce": {},
+                "Lojas": {},
+                "Ofertas": {},
+                "Comparador de Preços": {}
+            }
+        },
+        "Serviços": {
+            "tipo_categoria": "Subramos",
+            "categorias": {
+                "Delivery": {},
+                "Assistência": {},
+                "Consultoria": {},
+                "Manutenção": {},
+                "Limpeza": {}
+            }
+        }
+    }
+}

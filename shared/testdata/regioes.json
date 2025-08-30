@@ -1,0 +1,10 @@
+{
+    "tipo_categoria": "Região",
+    "categorias": {
+        "Norte": {},
+        "Nordeste": {},
+        "Centro-Oeste": {},
+        "Sudeste": {},
+        "Sul": {}
+    }
+}

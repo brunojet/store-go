@@ -1,4 +1,3 @@
-// Para cada configuração de cada app, resgata as 4 versões mais recentes e insere no catálogo com os estágios
 package repo
 
 import (
@@ -6,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"path/filepath"
 	"sync"
 	"testing"
 	"time"
@@ -15,6 +15,13 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
+
+// Carrega um arquivo JSON de shared/testdata dado apenas o nome do arquivo
+func LoadJSONFromTestdata(filename string) ([]byte, error) {
+	baseDir := "c:/Projects/store-go/shared/testdata"
+	absPath := filepath.Join(baseDir, filename)
+	return os.ReadFile(absPath)
+}
 
 // Struct para acumular métricas globais
 type MetricasExecucao struct {
@@ -80,148 +87,157 @@ func GetMetricasGlobal() *MetricasExecucao {
 	return metricasGlobal
 }
 
-func cadastroTipoCategoria(db *gorm.DB) {
-
-	//Preencher TipoCategoria
-	tipos := []domain.TipoCategoria{
-		{BaseEntity: domain.BaseEntity{Nome: "Região", Ativo: true}},
-		{BaseEntity: domain.BaseEntity{Nome: "Ramos", Ativo: true}},
-		{BaseEntity: domain.BaseEntity{Nome: "SubRamos", Ativo: true}},
+// Função auxiliar para cadastrar tipo de categoria se não existir
+// Estrutura para ler o novo JSON de regiões
+// Estrutura genérica para ler JSON de categorias
+// Função genérica recursiva para cadastrar tipos e categorias
+// Função genérica para carregar e cadastrar categorias a partir de um JSON
+// Cadastra modelos de terminal a partir do JSON
+func CadastroModelosTerminalFromJSON(db *gorm.DB) error {
+	data, err := LoadJSONFromTestdata("modelos_terminal.json")
+	if err != nil {
+		return err
 	}
-	for _, tipo := range tipos {
-		var existing domain.TipoCategoria
-		if err := db.Where("nome = ?", tipo.Nome).First(&existing).Error; err != nil {
-			db.Create(&tipo)
-		}
+	var entidades []domain.BaseEntity
+	if err := json.Unmarshal(data, &entidades); err != nil {
+		return err
 	}
-}
-
-func cadastroCategoriasRegiao(db *gorm.DB) {
-	var tipoRegiao domain.TipoCategoria
-
-	db.Where("nome = ?", "Região").First(&tipoRegiao)
-
-	categorias := []domain.Categoria{
-		{BaseEntity: domain.BaseEntity{Nome: "Norte", Ativo: true}, IdTipoCategoria: tipoRegiao.ID},
-		{BaseEntity: domain.BaseEntity{Nome: "Nordeste", Ativo: true}, IdTipoCategoria: tipoRegiao.ID},
-		{BaseEntity: domain.BaseEntity{Nome: "Centro-Oeste", Ativo: true}, IdTipoCategoria: tipoRegiao.ID},
-		{BaseEntity: domain.BaseEntity{Nome: "Sudeste", Ativo: true}, IdTipoCategoria: tipoRegiao.ID},
-		{BaseEntity: domain.BaseEntity{Nome: "Sul", Ativo: true}, IdTipoCategoria: tipoRegiao.ID},
-	}
-	for _, categoria := range categorias {
-		var existing domain.Categoria
-		if err := db.Where("nome = ? AND id_tipo_categoria = ?", categoria.Nome, categoria.IdTipoCategoria).First(&existing).Error; err != nil {
-			db.Create(&categoria)
-		}
-	}
-}
-
-func cadastroCategoriasRamo(db *gorm.DB) {
-	var tipoRamos domain.TipoCategoria
-	// Busca o tipo de categoria "Ramos"
-	db.Where("nome = ?", "Ramos").First(&tipoRamos)
-
-	ramosMacro := []string{
-		"Varejo", "Atacado", "Veículos", "Alimentação", "Saúde",
-		"Tecnologia", "Entretenimento", "Educação", "Finanças", "Imóveis",
-		"Transporte", "Comunicação", "Utilidades", "Compras", "Serviços",
-	}
-	for _, nome := range ramosMacro {
-		categoria := domain.Categoria{
-			BaseEntity:      domain.BaseEntity{Nome: nome, Ativo: true},
-			IdTipoCategoria: tipoRamos.ID,
-		}
-		var existing domain.Categoria
-		if err := db.Where("nome = ? AND id_tipo_categoria = ?", nome, tipoRamos.ID).First(&existing).Error; err != nil {
-			db.Create(&categoria)
-		}
-	}
-}
-
-func cadastroCategoriasSubRamo(db *gorm.DB) {
-	var tipoSubRamos domain.TipoCategoria
-	db.Where("nome = ?", "SubRamos").First(&tipoSubRamos)
-
-	// Buscar todos os ramos macro
-	var ramosMacro []domain.Categoria
-	db.Where("id_tipo_categoria = ?", tipoSubRamos.ID-1).Find(&ramosMacro) // tipoRamos.ID = tipoSubRamos.ID-1
-
-	// Subramos para cada ramo macro
-	subramosPorRamo := map[string][]string{
-		"Varejo":         {"Supermercado", "Loja de Roupas", "Papelaria", "Perfumaria", "Livraria", "Magazine", "E-commerce"},
-		"Atacado":        {"Distribuidora", "Atacado de Alimentos", "Atacado de Bebidas", "Atacado de Limpeza", "Atacado de Eletrônicos"},
-		"Veículos":       {"Concessionária", "Autopeças", "Oficina", "Locadora", "Revenda"},
-		"Alimentação":    {"Restaurante", "Padaria", "Lanchonete", "Pizzaria", "Cafeteria", "Delivery", "Fast Food"},
-		"Saúde":          {"Farmácia", "Clínica", "Laboratório", "Ótica", "Drogaria"},
-		"Tecnologia":     {"Software", "Cloud", "Streaming", "Redes Sociais", "Mensageria", "Banco Digital", "Marketplace", "Aplicativo Móvel"},
-		"Entretenimento": {"Cinema", "Música", "TV", "Streaming", "Jogos", "Eventos", "Shows"},
-		"Educação":       {"Cursos", "Plataforma EAD", "Idiomas", "Faculdade", "Aulas Online"},
-		"Finanças":       {"Banco Digital", "Carteira Digital", "Pagamentos", "Investimentos", "Seguros"},
-		"Imóveis":        {"Aluguel", "Compra", "Venda", "Condomínio", "Imobiliária"},
-		"Transporte":     {"Táxi", "Carona", "Mobilidade", "Ônibus", "Avião", "Locadora"},
-		"Comunicação":    {"Mensageria", "Redes Sociais", "E-mail", "Chamadas", "Videoconferência"},
-		"Utilidades":     {"Armazenamento", "Backup", "Organização", "Notas", "Calendário"},
-		"Compras":        {"Marketplace", "E-commerce", "Lojas", "Ofertas", "Comparador de Preços"},
-		"Serviços":       {"Delivery", "Assistência", "Consultoria", "Manutenção", "Limpeza"},
-	}
-
-	for _, ramo := range ramosMacro {
-		subramos := subramosPorRamo[ramo.Nome]
-		for _, nome := range subramos {
-			categoria := domain.Categoria{
-				BaseEntity:      domain.BaseEntity{Nome: nome, Ativo: true},
-				IdTipoCategoria: tipoSubRamos.ID,
-				IdPai:           &ramo.ID,
-			}
-			var existing domain.Categoria
-			if err := db.Where("nome = ? AND id_tipo_categoria = ? AND id_pai = ?", nome, tipoSubRamos.ID, ramo.ID).First(&existing).Error; err != nil {
-				db.Create(&categoria)
-			}
-		}
-	}
-}
-
-func casdastroModelosTerminal(db *gorm.DB) {
-	modelos := []domain.ModeloTerminal{
-		{BaseEntity: domain.BaseEntity{Nome: "L400", Ativo: true}},
-		{BaseEntity: domain.BaseEntity{Nome: "S350", Ativo: true}},
-		{BaseEntity: domain.BaseEntity{Nome: "GPOS700", Ativo: true}},
-	}
-	for _, modelo := range modelos {
+	for _, be := range entidades {
+		modelo := domain.ModeloTerminal{BaseEntity: be}
 		var existing domain.ModeloTerminal
 		if err := db.Where("nome = ?", modelo.Nome).First(&existing).Error; err != nil {
 			db.Create(&modelo)
 		}
 	}
+	return nil
 }
 
-func cadastroTiposIntegracao(db *gorm.DB) {
-	integracoes := []domain.TipoIntegracao{
-		{BaseEntity: domain.BaseEntity{Nome: "ADQ", Ativo: true}},
-		{BaseEntity: domain.BaseEntity{Nome: "TEF", Ativo: true}},
+// Cadastra tipos de integração a partir do JSON
+func CadastroTiposIntegracaoFromJSON(db *gorm.DB) error {
+	data, err := LoadJSONFromTestdata("tipos_integracao.json")
+	if err != nil {
+		return err
 	}
-	for _, integracao := range integracoes {
+	var entidades []domain.BaseEntity
+	if err := json.Unmarshal(data, &entidades); err != nil {
+		return err
+	}
+	for _, be := range entidades {
+		tipo := domain.TipoIntegracao{BaseEntity: be}
 		var existing domain.TipoIntegracao
-		if err := db.Where("nome = ?", integracao.Nome).First(&existing).Error; err != nil {
-			db.Create(&integracao)
+		if err := db.Where("nome = ?", tipo.Nome).First(&existing).Error; err != nil {
+			db.Create(&tipo)
 		}
 	}
+	return nil
 }
 
-func cadastroAplicativos(db *gorm.DB) {
-	appNames := []string{
-		"WhatsApp", "Instagram", "Facebook", "Twitter", "Telegram", "Spotify", "Netflix", "YouTube", "Gmail", "Google Maps",
-		"Uber", "Airbnb", "Dropbox", "Slack", "Zoom", "Teams", "Outlook", "Pinterest", "LinkedIn", "Reddit",
-		"Snapchat", "TikTok", "Shazam", "Duolingo", "Evernote", "Tinder", "Discord", "Notion", "Canva", "PayPal",
-		"Mercado Livre", "iFood", "Rappi", "99", "PicPay", "Banco Inter", "Nubank", "Santander", "Bradesco", "Banco do Brasil",
-		"Magazine Luiza", "Amazon", "Submarino", "Americanas", "Casas Bahia", "Carrefour", "Extra", "Pão de Açúcar", "Netshoes", "Centauro",
-		"OLX", "VivaReal", "Zap Imóveis", "QuintoAndar", "Catho", "InfoJobs", "Buscapé", "Peixe Urbano", "Booking", "Decolar",
-		"Skyscanner", "TripAdvisor", "Moovit", "Waze", "CVC", "Hurb", "Shell Box", "Petrobras Premmia", "Google Drive", "OneDrive",
-		"Adobe Reader", "Photoshop Express", "Lightroom", "VSCO", "PicsArt", "Camera360", "Remini", "InShot", "CapCut", "Kwai",
-		"GloboPlay", "Prime Video", "Disney+", "HBO Max", "Paramount+", "Star+", "Crunchyroll", "Twitch", "Steam", "Epic Games",
-		"Duolingo", "Coursera", "Udemy", "Khan Academy", "Alura", "Rocketseat", "Senai", "Sebrae", "Enem", "Estuda.com",
+func CadastroEstagiosFromJSON(db *gorm.DB) error {
+	data, err := LoadJSONFromTestdata("estagios_catalogo.json")
+	if err != nil {
+		return err
 	}
-	for _, name := range appNames {
+	var estagios []domain.Estagio
+	if err := json.Unmarshal(data, &estagios); err != nil {
+		return err
+	}
+	for _, estagio := range estagios {
+		var existing domain.Estagio
+		if err := db.Where("nome = ?", estagio.Nome).First(&existing).Error; err != nil {
+			db.Create(&estagio)
+		}
+	}
+	return nil
+}
+
+func CadastroCategoriasFromJSONPath(db *gorm.DB, relativePath string) error {
+	baseDir := "c:/Projects/store-go/shared/testdata"
+	absPath := filepath.Join(baseDir, relativePath)
+	file, err := os.Open(absPath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	var root CategoriasRoot
+	decoder := json.NewDecoder(file)
+	if err := decoder.Decode(&root); err != nil {
+		return err
+	}
+	return cadastroCategoriasFromJSONRec(db, root, nil)
+}
+func cadastroCategoriasFromJSONRec(db *gorm.DB, root CategoriasRoot, idPai *int64) error {
+	// Cadastra o tipo de categoria
+	tipoCat, err := ensureTipoCategoria(db, root.TipoCategoria)
+	if err != nil {
+		return err
+	}
+	for nome, raw := range root.Categorias {
+		// Cadastra a categoria
+		categoria := domain.Categoria{
+			BaseEntity:      domain.BaseEntity{Nome: nome, Ativo: true},
+			IdTipoCategoria: tipoCat.ID,
+			IdPai:           idPai,
+		}
+		var existing domain.Categoria
+		err := db.Where("nome = ? AND id_tipo_categoria = ?", nome, tipoCat.ID).First(&existing).Error
+		if err != nil {
+			if err := db.Create(&categoria).Error; err != nil {
+				return err
+			}
+		}
+		// Verifica se há subcategorias
+		var subcat CategoriasRoot
+		if err := json.Unmarshal(raw, &subcat); err == nil && len(subcat.Categorias) > 0 {
+			// Busca o ID da categoria recém-cadastrada
+			if err := cadastroCategoriasFromJSONRec(db, subcat, &categoria.ID); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+type CategoriasRoot struct {
+	TipoCategoria string                     `json:"tipo_categoria"`
+	Categorias    map[string]json.RawMessage `json:"categorias"`
+}
+
+func ensureTipoCategoria(db *gorm.DB, nome string) (domain.TipoCategoria, error) {
+	var tipo domain.TipoCategoria
+	if err := db.Where("nome = ?", nome).First(&tipo).Error; err != nil {
+		tipo = domain.TipoCategoria{BaseEntity: domain.BaseEntity{Nome: nome, Ativo: true}}
+		if err := db.Create(&tipo).Error; err != nil {
+			return tipo, err
+		}
+	}
+	return tipo, nil
+}
+
+// Estrutura para ler o JSON de regiões
+type Regiao struct {
+	Regiao string `json:"regiao"`
+}
+
+// Estrutura para ler o JSON de ramos e subramos
+type RamoSubramo struct {
+	Tipo     string   `json:"tipo"`
+	Ramo     string   `json:"ramo"`
+	Subramos []string `json:"subramos"`
+}
+
+func CadastroAplicativosFromJSON(db *gorm.DB) {
+	data, err := LoadJSONFromTestdata("aplicativos.json")
+	if err != nil {
+		fmt.Printf("Erro ao ler aplicativos.json: %v\n", err)
+		return
+	}
+	var apps map[string]map[string]interface{}
+	if err := json.Unmarshal(data, &apps); err != nil {
+		fmt.Printf("Erro ao decodificar aplicativos.json: %v\n", err)
+		return
+	}
+	for name := range apps {
 		var existing domain.Aplicativo
 		if err := db.Where("nome = ?", name).First(&existing).Error; err != nil {
 			app := domain.Aplicativo{BaseEntity: domain.BaseEntity{Nome: name, Ativo: true}}
@@ -230,7 +246,7 @@ func cadastroAplicativos(db *gorm.DB) {
 	}
 }
 
-func cadastroConfiguraces(db *gorm.DB) {
+func CadastroConfiguraces(db *gorm.DB) {
 	// Buscar todos os modelos de terminal
 	var modelos []domain.ModeloTerminal
 	db.Find(&modelos)
@@ -262,178 +278,92 @@ func cadastroConfiguraces(db *gorm.DB) {
 	}
 }
 
-func updateCadastroCategoria(db *gorm.DB, categoria domain.Categoria, baseModel domain.BaseModel) error {
-	// Associa categoria ao cadastro via GORM M2M
+func updateCadastroCategoria(db *gorm.DB, categorias []domain.Categoria, baseModel domain.BaseModel) error {
+	// Associa múltiplas categorias ao cadastro via GORM M2M
 	cadastro := domain.Cadastro{BaseModel: baseModel}
-	if err := db.Model(&cadastro).Association("Categorias").Append(&categoria); err != nil {
+	if err := db.Model(&cadastro).Association("Categorias").Append(&categorias); err != nil {
 		return err
 	}
 	return nil
 }
 
-func associarCategoriasAoCadastro(db *gorm.DB, categorias []domain.Categoria, baseModel domain.BaseModel) error {
-	n := len(categorias)
-	if n < 2 {
+func associarCategoriasAoCadastro(db *gorm.DB, categorias []domain.Categoria, nomeApp string, baseModel domain.BaseModel) error {
+	// Busca nome do app no cadastro
+	var cadastro domain.Cadastro
+	if err := db.Where("id = ?", baseModel.ID).First(&cadastro).Error; err != nil {
+		return err
+	}
+
+	data, err := LoadJSONFromTestdata("aplicativos.json")
+	if err != nil {
+		return err
+	}
+	var apps map[string]map[string]interface{}
+	if err := json.Unmarshal(data, &apps); err != nil {
+		return err
+	}
+	appInfo, ok := apps[nomeApp]
+	if !ok {
 		return nil
 	}
-	idxs := rand.Perm(n)[:2]
-
-	for _, idx := range idxs {
-		if err := updateCadastroCategoria(db, categorias[idx], baseModel); err != nil {
+	// Acumula categorias a associar
+	var catsToAssociate []domain.Categoria
+	// Associa regiões
+	if regioes, ok := appInfo["regioes"].([]interface{}); ok {
+		for _, reg := range regioes {
+			regStr, ok := reg.(string)
+			if !ok {
+				continue
+			}
+			for _, cat := range categorias {
+				if cat.Nome == regStr {
+					catsToAssociate = append(catsToAssociate, cat)
+				}
+			}
+		}
+	}
+	// Associa ramo
+	if ramo, ok := appInfo["ramo"].(string); ok {
+		for _, cat := range categorias {
+			if cat.Nome == ramo {
+				catsToAssociate = append(catsToAssociate, cat)
+				break
+			}
+		}
+	}
+	// Associa subramo
+	if subramo, ok := appInfo["subramo"].(string); ok {
+		for _, cat := range categorias {
+			if cat.Nome == subramo {
+				catsToAssociate = append(catsToAssociate, cat)
+				break
+			}
+		}
+	}
+	if len(catsToAssociate) > 0 {
+		if err := updateCadastroCategoria(db, catsToAssociate, baseModel); err != nil {
 			return err
 		}
 	}
-
 	return nil
 }
 
-func associarRamoESubRamoAoCadastro(db *gorm.DB, nome string, ramos, subramos []domain.Categoria, baseModel domain.BaseModel) error {
-	appToCategoria := map[string][2]string{
-		"WhatsApp":          {"Comunicação", "Mensageria"},
-		"Instagram":         {"Comunicação", "Redes Sociais"},
-		"Facebook":          {"Comunicação", "Redes Sociais"},
-		"Twitter":           {"Comunicação", "Redes Sociais"},
-		"Telegram":          {"Comunicação", "Mensageria"},
-		"Spotify":           {"Entretenimento", "Música"},
-		"Netflix":           {"Entretenimento", "Streaming"},
-		"YouTube":           {"Entretenimento", "Streaming"},
-		"Gmail":             {"Comunicação", "E-mail"},
-		"Google Maps":       {"Transporte", "Mobilidade"},
-		"Uber":              {"Transporte", "Mobilidade"},
-		"Airbnb":            {"Imóveis", "Aluguel"},
-		"Dropbox":           {"Utilidades", "Armazenamento"},
-		"Slack":             {"Comunicação", "Mensageria"},
-		"Zoom":              {"Comunicação", "Videoconferência"},
-		"Teams":             {"Comunicação", "Videoconferência"},
-		"Outlook":           {"Comunicação", "E-mail"},
-		"Pinterest":         {"Entretenimento", "Redes Sociais"},
-		"LinkedIn":          {"Comunicação", "Redes Sociais"},
-		"Reddit":            {"Entretenimento", "Redes Sociais"},
-		"Snapchat":          {"Comunicação", "Redes Sociais"},
-		"TikTok":            {"Entretenimento", "Streaming"},
-		"Shazam":            {"Entretenimento", "Música"},
-		"Duolingo":          {"Educação", "Idiomas"},
-		"Evernote":          {"Utilidades", "Notas"},
-		"Tinder":            {"Entretenimento", "Eventos"},
-		"Discord":           {"Comunicação", "Mensageria"},
-		"Notion":            {"Utilidades", "Organização"},
-		"Canva":             {"Tecnologia", "Software"},
-		"PayPal":            {"Finanças", "Pagamentos"},
-		"Mercado Livre":     {"Compras", "Marketplace"},
-		"iFood":             {"Alimentação", "Delivery"},
-		"Rappi":             {"Alimentação", "Delivery"},
-		"99":                {"Transporte", "Mobilidade"},
-		"PicPay":            {"Finanças", "Carteira Digital"},
-		"Banco Inter":       {"Finanças", "Banco Digital"},
-		"Nubank":            {"Finanças", "Banco Digital"},
-		"Santander":         {"Finanças", "Banco Digital"},
-		"Bradesco":          {"Finanças", "Banco Digital"},
-		"Banco do Brasil":   {"Finanças", "Banco Digital"},
-		"Magazine Luiza":    {"Varejo", "Magazine"},
-		"Amazon":            {"Compras", "Marketplace"},
-		"Submarino":         {"Compras", "Marketplace"},
-		"Americanas":        {"Compras", "Marketplace"},
-		"Casas Bahia":       {"Varejo", "Magazine"},
-		"Carrefour":         {"Varejo", "Supermercado"},
-		"Extra":             {"Varejo", "Supermercado"},
-		"Pão de Açúcar":     {"Varejo", "Supermercado"},
-		"Netshoes":          {"Varejo", "Lojas"},
-		"Centauro":          {"Varejo", "Lojas"},
-		"OLX":               {"Imóveis", "Venda"},
-		"VivaReal":          {"Imóveis", "Aluguel"},
-		"Zap Imóveis":       {"Imóveis", "Aluguel"},
-		"QuintoAndar":       {"Imóveis", "Aluguel"},
-		"Catho":             {"Serviços", "Consultoria"},
-		"InfoJobs":          {"Serviços", "Consultoria"},
-		"Buscapé":           {"Compras", "Comparador de Preços"},
-		"Peixe Urbano":      {"Serviços", "Ofertas"},
-		"Booking":           {"Imóveis", "Aluguel"},
-		"Decolar":           {"Transporte", "Avião"},
-		"Skyscanner":        {"Transporte", "Avião"},
-		"TripAdvisor":       {"Serviços", "Consultoria"},
-		"Moovit":            {"Transporte", "Mobilidade"},
-		"Waze":              {"Transporte", "Mobilidade"},
-		"CVC":               {"Serviços", "Consultoria"},
-		"Hurb":              {"Serviços", "Consultoria"},
-		"Shell Box":         {"Serviços", "Assistência"},
-		"Petrobras Premmia": {"Serviços", "Assistência"},
-		"Google Drive":      {"Utilidades", "Armazenamento"},
-		"OneDrive":          {"Utilidades", "Armazenamento"},
-		"Adobe Reader":      {"Tecnologia", "Software"},
-		"Photoshop Express": {"Tecnologia", "Software"},
-		"Lightroom":         {"Tecnologia", "Software"},
-		"VSCO":              {"Tecnologia", "Software"},
-		"PicsArt":           {"Tecnologia", "Software"},
-		"Camera360":         {"Tecnologia", "Aplicativo Móvel"},
-		"Remini":            {"Tecnologia", "Aplicativo Móvel"},
-		"InShot":            {"Tecnologia", "Aplicativo Móvel"},
-		"CapCut":            {"Tecnologia", "Aplicativo Móvel"},
-		"Kwai":              {"Entretenimento", "Streaming"},
-		"GloboPlay":         {"Entretenimento", "Streaming"},
-		"Prime Video":       {"Entretenimento", "Streaming"},
-		"Disney+":           {"Entretenimento", "Streaming"},
-		"HBO Max":           {"Entretenimento", "Streaming"},
-		"Paramount+":        {"Entretenimento", "Streaming"},
-		"Star+":             {"Entretenimento", "Streaming"},
-		"Crunchyroll":       {"Entretenimento", "Streaming"},
-		"Twitch":            {"Entretenimento", "Streaming"},
-		"Steam":             {"Entretenimento", "Jogos"},
-		"Epic Games":        {"Entretenimento", "Jogos"},
-		"Coursera":          {"Educação", "Cursos"},
-		"Udemy":             {"Educação", "Cursos"},
-		"Khan Academy":      {"Educação", "Cursos"},
-		"Alura":             {"Educação", "Cursos"},
-		"Rocketseat":        {"Educação", "Cursos"},
-		"Senai":             {"Educação", "Cursos"},
-		"Sebrae":            {"Educação", "Cursos"},
-		"Enem":              {"Educação", "Aulas Online"},
-		"Estuda.com":        {"Educação", "Aulas Online"},
-	}
-
-	ramoSubRamoApp := appToCategoria[nome]
-	for _, r := range ramos {
-		if r.Nome == ramoSubRamoApp[0] {
-			if err := updateCadastroCategoria(db, r, baseModel); err != nil {
-				return err
-			}
-			break
-		}
-	}
-
-	for _, sr := range subramos {
-		if sr.Nome == ramoSubRamoApp[1] {
-			if err := updateCadastroCategoria(db, sr, baseModel); err != nil {
-				return err
-			}
-			break
-		}
-	}
-
-	return nil
-}
-
-func associarConfiguracaoAoCadastro(db *gorm.DB, config domain.Configuracao, baseModel domain.BaseModel) error {
-	// Associa configuração ao cadastro via GORM M2M
+func associarConfiguracaoAoCadastro(db *gorm.DB, configuracoes []domain.Configuracao, baseModel domain.BaseModel) error {
+	// Associa múltiplas configurações ao cadastro via GORM M2M
 	cadastro := domain.Cadastro{BaseModel: baseModel}
-	if err := db.Model(&cadastro).Association("Configuracoes").Append(&config); err != nil {
+	if err := db.Model(&cadastro).Association("Configuracoes").Append(&configuracoes); err != nil {
 		return err
 	}
 	return nil
 }
 
-func solicitarCadastroAplicativo(db *gorm.DB) error {
-	var tipoRegiao domain.TipoCategoria
+func SolicitarCadastroAplicativo(db *gorm.DB) error {
+	var tipoRegiao, tipoRamos, tipoSubRamos domain.TipoCategoria
 	db.Where("nome = ?", "Região").First(&tipoRegiao)
-	var regioes []domain.Categoria
-	db.Where("id_tipo_categoria = ?", tipoRegiao.ID).Find(&regioes)
-	var tipoRamos domain.TipoCategoria
 	db.Where("nome = ?", "Ramos").First(&tipoRamos)
-	var ramos []domain.Categoria
-	db.Where("id_tipo_categoria = ?", tipoRamos.ID).Find(&ramos)
-	var tipoSubRamos domain.TipoCategoria
-	db.Where("nome = ?", "SubRamos").First(&tipoSubRamos)
-	var subramos []domain.Categoria
-	db.Where("id_tipo_categoria = ?", tipoSubRamos.ID).Find(&subramos)
+	db.Where("nome = ?", "Subramos").First(&tipoSubRamos)
+	var todasCategorias []domain.Categoria
+	db.Where("id_tipo_categoria IN ?", []int64{tipoRegiao.ID, tipoRamos.ID, tipoSubRamos.ID}).Find(&todasCategorias)
 
 	var apps []domain.Aplicativo
 	db.Find(&apps)
@@ -467,15 +397,12 @@ func solicitarCadastroAplicativo(db *gorm.DB) error {
 		if tx := db.Create(&cadastroConfig); tx.Error != nil {
 			return tx.Error
 		}
-		if err := associarCategoriasAoCadastro(db, regioes, cadastroConfig.BaseModel); err != nil {
-			return err
-		}
-		if err := associarRamoESubRamoAoCadastro(db, app.Nome, ramos, subramos, cadastroConfig.BaseModel); err != nil {
+		if err := associarCategoriasAoCadastro(db, todasCategorias, app.Nome, cadastroConfig.BaseModel); err != nil {
 			return err
 		}
 
-		for _, config := range configuracoes {
-			if err := associarConfiguracaoAoCadastro(db, config, cadastroConfig.BaseModel); err != nil {
+		if len(configuracoes) > 0 {
+			if err := associarConfiguracaoAoCadastro(db, configuracoes, cadastroConfig.BaseModel); err != nil {
 				return err
 			}
 		}
@@ -484,7 +411,7 @@ func solicitarCadastroAplicativo(db *gorm.DB) error {
 	return nil
 }
 
-func solicitarCadastroVersaoAplicativo(db *gorm.DB) error {
+func SolicitarCadastroVersaoAplicativo(db *gorm.DB) error {
 	var apps []domain.Aplicativo
 	if err := db.Find(&apps).Error; err != nil {
 		return err
@@ -546,7 +473,7 @@ func getCadastroAplicativo(db *gorm.DB, appID int64) (domain.Cadastro, error) {
 	return cadastro, nil
 }
 
-func solicitarPublicacaoVersaoAplicativo(db *gorm.DB) error {
+func SolicitarPublicacaoVersaoAplicativo(db *gorm.DB) error {
 	var apps []domain.Aplicativo
 	if err := db.Find(&apps).Error; err != nil {
 		return err
@@ -614,22 +541,6 @@ func solicitarPublicacaoVersaoAplicativo(db *gorm.DB) error {
 	}
 
 	return nil
-}
-
-// Popula os estágios do aplicativo no banco
-func popularEstagiosCatalogo(db *gorm.DB) {
-	estagios := []domain.Estagio{
-		{BaseEntity: domain.BaseEntity{Nome: "Certificação", Descricao: "App em processo de certificação técnica e funcional", Ativo: true}},
-		{BaseEntity: domain.BaseEntity{Nome: "Revisão", Descricao: "App em revisão de homologação e documentação", Ativo: true}},
-		{BaseEntity: domain.BaseEntity{Nome: "Piloto", Descricao: "App liberado para piloto controlado em campo", Ativo: true}},
-		{BaseEntity: domain.BaseEntity{Nome: "Produção", Descricao: "App disponível para uso em produção", Ativo: true}},
-	}
-	for _, estagio := range estagios {
-		var existing domain.Estagio
-		if err := db.Where("nome = ?", estagio.Nome).First(&existing).Error; err != nil {
-			db.Create(&estagio)
-		}
-	}
 }
 
 func gerarJsonAppsPorRegiao(db *gorm.DB) error {
@@ -744,42 +655,40 @@ func TestEntrypoint(t *testing.T) {
 	}
 	setup := false
 	if setup {
-		cadastroTipoCategoria(db)
-		cadastroCategoriasRegiao(db)
-		popularEstagiosCatalogo(db)
-		solicitarCadastroAplicativo(db)
-		cadastroCategoriasRamo(db)
-		cadastroCategoriasSubRamo(db)
-		casdastroModelosTerminal(db)
-		cadastroTiposIntegracao(db)
-		cadastroAplicativos(db)
-		cadastroConfiguraces(db)
+		CadastroCategoriasFromJSONPath(db, "regioes.json")
+		CadastroCategoriasFromJSONPath(db, "ramos_subramos.json")
+		CadastroModelosTerminalFromJSON(db)
+		CadastroTiposIntegracaoFromJSON(db)
+		CadastroAplicativosFromJSON(db)
+		CadastroConfiguraces(db)
+		CadastroEstagiosFromJSON(db)
 	}
 
-	loadVersao := false
+	loadVersao := true
 
 	if loadVersao {
 		for i := 0; i < 100; i++ {
-			solicitarCadastroVersaoAplicativo(db)
-			solicitarPublicacaoVersaoAplicativo(db)
+			//SolicitarCadastroAplicativo(db)
+			SolicitarCadastroVersaoAplicativo(db)
+			SolicitarPublicacaoVersaoAplicativo(db)
 		}
 	}
 
-	//	gerarJsonAppsPorRegiao(db)
+	//gerarJsonAppsPorRegiao(db)
 	//gerarJsonAppsPorRegiaoCatalogo(db)
 
-	var wg sync.WaitGroup
-	metricasGlobal = &MetricasExecucao{} // resetar métricas
-	for i := 0; i < 10; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for j := 0; j < 20; j++ {
-				gerarJsonAppsPorRegiaoCatalogo(db)
-				time.Sleep(100 * time.Millisecond)
-			}
-		}()
-	}
-	wg.Wait()
-	metricasGlobal.CalcularMetricas("gerarJsonAppsPorRegiao")
+	// var wg sync.WaitGroup
+	// metricasGlobal = &MetricasExecucao{} // resetar métricas
+	// for i := 0; i < 10; i++ {
+	// 	wg.Add(1)
+	// 	go func() {
+	// 		defer wg.Done()
+	// 		for j := 0; j < 20; j++ {
+	// 			gerarJsonAppsPorRegiaoCatalogo(db)
+	// 			time.Sleep(100 * time.Millisecond)
+	// 		}
+	// 	}()
+	// }
+	// wg.Wait()
+	// metricasGlobal.CalcularMetricas("gerarJsonAppsPorRegiao")
 }
