@@ -180,7 +180,7 @@ func cadastroCategoriasFromJSONRec(db *gorm.DB, root CategoriasRoot, idPai *int6
 			IdPai:           idPai,
 		}
 		var existing domain.Categoria
-		err := db.Where("nome = ? AND id_tipo_categoria = ?", nome, tipoCat.ID).First(&existing).Error
+		err := db.Where("nome = ? AND id_tip_ctgr = ?", nome, tipoCat.ID).First(&existing).Error
 		if err != nil {
 			if err := db.Create(&categoria).Error; err != nil {
 				return err
@@ -263,11 +263,11 @@ func CadastroConfiguraces(db *gorm.DB) {
 		for _, modelo := range modelos {
 			for _, integracao := range integracoes {
 				// Verifica se já existe configuração
-				var existing domain.Configuracao
-				db.Where("id_app = ? AND id_modelo_terminal = ? AND id_tipo_integracao = ?", app.ID, modelo.ID, integracao.ID).First(&existing)
+				var existing domain.ConfiguracaoAplicativo
+				db.Where("id_aplv = ? AND id_mdl_trml = ? AND id_tip_itgr = ?", app.ID, modelo.ID, integracao.ID).First(&existing)
 				if existing.ID == 0 {
-					config := domain.Configuracao{
-						IdApp:            app.ID,
+					config := domain.ConfiguracaoAplicativo{
+						IdAplicativo:     app.ID,
 						IdModeloTerminal: modelo.ID,
 						IdTipoIntegracao: integracao.ID,
 					}
@@ -280,7 +280,7 @@ func CadastroConfiguraces(db *gorm.DB) {
 
 func updateCadastroCategoria(db *gorm.DB, categorias []domain.Categoria, baseModel domain.BaseModel) error {
 	// Associa múltiplas categorias ao cadastro via GORM M2M
-	cadastro := domain.Cadastro{BaseModel: baseModel}
+	cadastro := domain.HistoricoPerfilAplicativo{BaseModel: baseModel}
 	if err := db.Model(&cadastro).Association("Categorias").Append(&categorias); err != nil {
 		return err
 	}
@@ -289,7 +289,7 @@ func updateCadastroCategoria(db *gorm.DB, categorias []domain.Categoria, baseMod
 
 func associarCategoriasAoCadastro(db *gorm.DB, categorias []domain.Categoria, nomeApp string, baseModel domain.BaseModel) error {
 	// Busca nome do app no cadastro
-	var cadastro domain.Cadastro
+	var cadastro domain.HistoricoPerfilAplicativo
 	if err := db.Where("id = ?", baseModel.ID).First(&cadastro).Error; err != nil {
 		return err
 	}
@@ -348,10 +348,10 @@ func associarCategoriasAoCadastro(db *gorm.DB, categorias []domain.Categoria, no
 	return nil
 }
 
-func associarConfiguracaoAoCadastro(db *gorm.DB, configuracoes []domain.Configuracao, baseModel domain.BaseModel) error {
+func associarConfiguracaoAoCadastro(db *gorm.DB, configuracoes []domain.ConfiguracaoAplicativo, baseModel domain.BaseModel) error {
 	// Associa múltiplas configurações ao cadastro via GORM M2M
-	cadastro := domain.Cadastro{BaseModel: baseModel}
-	if err := db.Model(&cadastro).Association("Configuracoes").Append(&configuracoes); err != nil {
+	cadastro := domain.HistoricoPerfilAplicativo{BaseModel: baseModel}
+	if err := db.Model(&cadastro).Association("ConfiguracoesAplicativo").Append(&configuracoes); err != nil {
 		return err
 	}
 	return nil
@@ -363,32 +363,31 @@ func SolicitarCadastroAplicativo(db *gorm.DB) error {
 	db.Where("nome = ?", "Ramos").First(&tipoRamos)
 	db.Where("nome = ?", "Subramos").First(&tipoSubRamos)
 	var todasCategorias []domain.Categoria
-	db.Where("id_tipo_categoria IN ?", []int64{tipoRegiao.ID, tipoRamos.ID, tipoSubRamos.ID}).Find(&todasCategorias)
+	db.Where("id_tip_ctgr IN ?", []int64{tipoRegiao.ID, tipoRamos.ID, tipoSubRamos.ID}).Find(&todasCategorias)
 
 	var apps []domain.Aplicativo
 	db.Find(&apps)
 
 	for _, app := range apps {
 		// Buscar todas as configurações do app
-		var configuracoes []domain.Configuracao
+		var configuracoes []domain.ConfiguracaoAplicativo
 		db.Preload("ModeloTerminal", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id, nome")
 		}).Preload("TipoIntegracao", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id, nome")
-		}).Where("id_app = ?", app.ID).Find(&configuracoes)
+		}).Where("id_aplv = ?", app.ID).Find(&configuracoes)
 
-		cadastroConfig := domain.Cadastro{
-			IdApp: app.ID,
-			Contato: domain.Contato{
+		cadastroConfig := domain.HistoricoPerfilAplicativo{
+			IdAplicativo: app.ID,
+			ContatoAplicativo: domain.ContatoAplicativo{
 				BaseEntity: domain.BaseEntity{
-					Nome: "Contato " + app.Nome,
+					Nome: app.Nome + " S.A.",
 				},
-				RazaoSocial: app.Nome + " S.A.",
-				Email:       "contato@" + app.Nome + ".com",
-				Telefone:    "1234-5678",
-				Site:        "www." + app.Nome + ".com",
+				Email:    "ContatoAplicativo@" + app.Nome + ".com",
+				Telefone: "1234-5678",
+				Site:     "www." + app.Nome + ".com",
 			},
-			DetalhesAplicativo: domain.DetalhesAplicativo{
+			DetalheAplicativo: domain.DetalheAplicativo{
 				Descricao: fmt.Sprintf(
 					"Cadastro para %s",
 					app.Nome),
@@ -426,7 +425,7 @@ func SolicitarCadastroVersaoAplicativo(db *gorm.DB) error {
 		}
 
 		var versoes []domain.VersaoAplicativo
-		for _, config := range cadastro.Configuracoes {
+		for _, config := range cadastro.ConfiguracoesAplicativo {
 			now := time.Now()
 			year := now.Year() % 100
 			dayOfYear := now.YearDay()
@@ -435,10 +434,10 @@ func SolicitarCadastroVersaoAplicativo(db *gorm.DB) error {
 			tamanho := int64(rand.Intn(190)+10) * 1024 * 1024 // 10MB a 200MB
 
 			versao := domain.VersaoAplicativo{
-				IdConfiguracao: config.ID,
-				BaseEntity:     domain.BaseEntity{Nome: app.Nome},
-				Tamanho:        tamanho,
-				NomeVersao:     nomeVersao,
+				IdConfiguracaoAplicativo: config.ID,
+				BaseEntity:               domain.BaseEntity{Nome: app.Nome},
+				Tamanho:                  tamanho,
+				NomeVersao:               nomeVersao,
 				Imagem: domain.Imagem{
 					Anexo: domain.Anexo{
 						Nome:          fmt.Sprintf("Imagem da versão %s do aplicativo %s", nomeVersao, app.Nome),
@@ -462,13 +461,13 @@ func SolicitarCadastroVersaoAplicativo(db *gorm.DB) error {
 	return nil
 }
 
-func getCadastroAplicativo(db *gorm.DB, appID int64) (domain.Cadastro, error) {
-	var cadastro domain.Cadastro
-	if err := db.Where("id_app = ?", appID).
+func getCadastroAplicativo(db *gorm.DB, appID int64) (domain.HistoricoPerfilAplicativo, error) {
+	var cadastro domain.HistoricoPerfilAplicativo
+	if err := db.Where("id_aplv = ?", appID).
 		Order("created_at desc").
-		Preload("Configuracoes").
+		Preload("ConfiguracoesAplicativo").
 		First(&cadastro).Error; err != nil {
-		return domain.Cadastro{}, err
+		return domain.HistoricoPerfilAplicativo{}, err
 	}
 	return cadastro, nil
 }
@@ -490,15 +489,15 @@ func SolicitarPublicacaoVersaoAplicativo(db *gorm.DB) error {
 		}
 
 		// Para cada configuração do cadastro, buscar a versão mais recente e atualizar o catálogo
-		for _, config := range cadastro.Configuracoes {
+		for _, config := range cadastro.ConfiguracoesAplicativo {
 			var versaoAtual domain.VersaoAplicativo
-			if err := db.Where("id_configuracao = ?", config.ID).Order("created_at desc").First(&versaoAtual).Error; err != nil || versaoAtual.ID == 0 {
+			if err := db.Where("id_cfg_aplv = ?", config.ID).Order("created_at desc").First(&versaoAtual).Error; err != nil || versaoAtual.ID == 0 {
 				continue
 			}
 
 			var catalogos []domain.CatalogoAplicativo
 
-			db.Preload("Estagio").Where("id_configuracao = ?", config.ID).Order("id_estagio DESC").Find(&catalogos)
+			db.Preload("Estagio").Where("id_cfg_aplv = ?", config.ID).Order("id_est DESC").Find(&catalogos)
 
 			lenCatalogos := len(catalogos)
 			lenEstagios := len(estagios)
@@ -506,10 +505,9 @@ func SolicitarPublicacaoVersaoAplicativo(db *gorm.DB) error {
 			// Cria novo catálogo se ainda não percorreu todos os estágios
 			if lenCatalogos < lenEstagios {
 				novoCatalogo := domain.CatalogoAplicativo{
-					IdCadastro:     cadastro.ID,
-					IdConfiguracao: config.ID,
-					Ativo:          true,
-					IdEstagio:      estagios[lenCatalogos].ID,
+					IdHistoricoPerfilAplicativo:    cadastro.ID,
+					IdConfiguracaoPerfilAplicativo: config.ID,
+					IdEstagio:                      estagios[lenCatalogos].ID,
 					IdVersaoAplicativo: func() int64 {
 						if lenCatalogos == 0 {
 							return versaoAtual.ID
@@ -547,14 +545,14 @@ func gerarJsonAppsPorRegiao(db *gorm.DB) error {
 	consultaVersaoApp := func(db *gorm.DB, regiaoID, modeloID, integracaoID int64) ([]map[string]interface{}, error) {
 		var result []map[string]interface{}
 		err := db.Debug().Table("versao_app").
-			Select(`versao_app.nome as nome_app, versao_app.tamanho, mdl_trml.nome as modelo_terminal_nome, tip_int.nome as tipo_integracao_nome, cat.nome as categoria_nome, versao_app.id as id_versao`).
+			Select(`versao_app.nome as nome_app, versao_app.tamanho, mdl_trml.nome as modelo_terminal_nome, tip_itgr.nome as tipo_integracao_nome, cat.nome as categoria_nome, versao_app.id as id_versao`).
 			Joins("JOIN cat_app ON cat_app.id_versao_aplicativo = versao_app.id"). //Localiza a versao no catalogo
-			Joins("JOIN cfg ON cfg.id = versao_app.id_configuracao").              //Localiza a configuracao
+			Joins("JOIN cfg ON cfg.id = versao_app.id_cfg_aplv").                  //Localiza a configuracao
 			Joins("JOIN cad ON cad.id = cat_app.id_cadastro").                     //Localiza o cadastro
 			Joins("JOIN cat_cad ON cat_cad.cadastro_id = cad.id").                 //M2M cadastro-categoria
 			Joins("JOIN cat ON cat.id = cat_cad.categoria_id").                    //Localiza a categoria
 			Joins("JOIN mdl_trml ON mdl_trml.id = cfg.id_modelo_terminal").        //Localiza o modelo do terminal
-			Joins("JOIN tip_int ON tip_int.id = cfg.id_tipo_integracao").          //Localiza o tipo de integração
+			Joins("JOIN tip_itgr ON tip_itgr.id = cfg.id_tipo_integracao").        //Localiza o tipo de integração
 			Where("cfg.id_modelo_terminal = ?", modeloID).
 			Where("cfg.id_tipo_integracao = ?", integracaoID).
 			Where("cat.id = ?", regiaoID).
@@ -571,14 +569,14 @@ func gerarJsonAppsPorRegiaoCatalogo(db *gorm.DB) error {
 	consultaCatalogoApp := func(db *gorm.DB, regiaoID, modeloID, integracaoID int64) ([]map[string]interface{}, error) {
 		var result []map[string]interface{}
 		err := db.Table("cat_app").
-			Select(`versao_app.nome as nome_app, versao_app.tamanho, mdl_trml.nome as modelo_terminal_nome, tip_int.nome as tipo_integracao_nome, cat.nome as categoria_nome, versao_app.id as id_versao`).
+			Select(`versao_app.nome as nome_app, versao_app.tamanho, mdl_trml.nome as modelo_terminal_nome, tip_itgr.nome as tipo_integracao_nome, cat.nome as categoria_nome, versao_app.id as id_versao`).
 			Joins("JOIN versao_app ON versao_app.id = cat_app.id_versao_aplicativo"). //Localiza a versão no catálogo
-			Joins("JOIN cfg ON cfg.id = versao_app.id_configuracao").                 //Localiza a configuração
+			Joins("JOIN cfg ON cfg.id = versao_app.id_cfg_aplv").                     //Localiza a configuração
 			Joins("JOIN cad ON cad.id = cat_app.id_cadastro").                        //Localiza o cadastro
 			Joins("JOIN cat_cad ON cat_cad.cadastro_id = cad.id").                    //M2M cadastro-categoria
 			Joins("JOIN cat ON cat.id = cat_cad.categoria_id").                       //Localiza a categoria
 			Joins("JOIN mdl_trml ON mdl_trml.id = cfg.id_modelo_terminal").           //Localiza o modelo do terminal
-			Joins("JOIN tip_int ON tip_int.id = cfg.id_tipo_integracao").             //Localiza o tipo de integração
+			Joins("JOIN tip_itgr ON tip_itgr.id = cfg.id_tipo_integracao").           //Localiza o tipo de integração
 			Where("cfg.id_modelo_terminal = ?", modeloID).
 			Where("cfg.id_tipo_integracao = ?", integracaoID).
 			Where("cat.id = ?", regiaoID).
@@ -600,8 +598,8 @@ func gerarJsonAppsGenerico(
 ) error {
 	var idsRegioes []int64
 	db.Model(&domain.Categoria{}).
-		Joins("JOIN tip_cat ON tip_cat.id = cat.id_tipo_categoria").
-		Where("tip_cat.nome = ?", "Região").
+		Joins("JOIN tip_ctgr ON tip_ctgr.id = cat.id_tip_ctgr").
+		Where("tip_ctgr.nome = ?", "Região").
 		Pluck("cat.id", &idsRegioes)
 
 	var modelos []domain.ModeloTerminal

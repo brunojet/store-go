@@ -4,4 +4,4 @@ type TipoCategoria struct {
 	BaseEntity
 }
 
-func (TipoCategoria) TableName() string { return "tip_cat" }
+func (TipoCategoria) TableName() string { return "tip_ctgr" }

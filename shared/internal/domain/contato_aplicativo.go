@@ -6,16 +6,15 @@ import (
 	"gorm.io/gorm"
 )
 
-type Contato struct {
+type ContatoAplicativo struct {
 	BaseEntity
-	RazaoSocial string `gorm:"column:razao_social;not null"`
-	Site        string `gorm:"column:site;not null"`
-	Email       string `gorm:"column:email;not null"`
-	Telefone    string `gorm:"column:telefone;not null"`
+	Site     string `gorm:"column:site;not null"`
+	Email    string `gorm:"column:email;not null"`
+	Telefone string `gorm:"column:telefone;not null"`
 }
 
-func (c *Contato) BeforeCreate(tx *gorm.DB) (err error) {
-	if len(c.RazaoSocial) < 3 {
+func (c *ContatoAplicativo) BeforeCreate(tx *gorm.DB) (err error) {
+	if len(c.Nome) < 3 {
 		return errors.New("razao_social deve ter pelo menos 3 caracteres")
 	}
 	if len(c.Site) < 3 {
@@ -30,4 +29,4 @@ func (c *Contato) BeforeCreate(tx *gorm.DB) (err error) {
 	return nil
 }
 
-func (Contato) TableName() string { return "cnt_app" }
+func (ContatoAplicativo) TableName() string { return "cnt_aplv" }

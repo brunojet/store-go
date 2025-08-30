@@ -18,27 +18,27 @@ type Categoria = id.Categoria
 type TipoIntegracao = id.TipoIntegracao
 type ModeloTerminal = id.ModeloTerminal
 type Imagem = id.Imagem
-type Contato = id.Contato
+type ContatoAplicativo = id.ContatoAplicativo
 type Aplicativo = id.Aplicativo
-type DetalhesAplicativo = id.DetalhesAplicativo
-type Configuracao = id.Configuracao
+type DetalheAplicativo = id.DetalheAplicativo
+type ConfiguracaoAplicativo = id.ConfiguracaoAplicativo
 type VersaoAplicativo = id.VersaoAplicativo
-type Cadastro = id.Cadastro
+type HistoricoPerfilAplicativo = id.HistoricoPerfilAplicativo
 type Estagio = id.Estagio
 type CatalogoAplicativo = id.CatalogoAplicativo
 
 var EntidadesAutoMigrate = []interface{}{
-	&TipoCategoria{},      // base para Categoria
-	&Categoria{},          // depende de TipoCategoria
-	&TipoIntegracao{},     // base para Configuracao, CatalogoAplicativo
-	&ModeloTerminal{},     // base para Configuracao, CatalogoAplicativo
-	&Imagem{},             // base para VersaoAplicativo
-	&Contato{},            // base para Cadastro
-	&Aplicativo{},         // base para AppCategoria, Configuracao, Cadastro, CatalogoAplicativo
-	&DetalhesAplicativo{}, // pode ser compartilhado entre vários cadastros
-	&Configuracao{},       // depende de TipoIntegracao, ModeloTerminal, Aplicativo
-	&VersaoAplicativo{},   // depende de Configuracao, Imagem
-	&Cadastro{},           // depende de Aplicativo, Contato, DetalhesAplicativo
-	&Estagio{},            // base para CatalogoAplicativo
-	&CatalogoAplicativo{}, // depende de TipoIntegracao, ModeloTerminal, Estagio, Aplicativo, VersaoAplicativo, Cadastro
+	&TipoCategoria{},             // base para Categoria
+	&Categoria{},                 // depende de TipoCategoria
+	&TipoIntegracao{},            // base para Configuracao, CatalogoAplicativo
+	&ModeloTerminal{},            // base para Configuracao, CatalogoAplicativo
+	&Imagem{},                    // base para VersaoAplicativo
+	&ContatoAplicativo{},         // base para Cadastro
+	&Aplicativo{},                // base para AppCategoria, Configuracao, Cadastro, CatalogoAplicativo
+	&DetalheAplicativo{},         // pode ser compartilhado entre vários cadastros
+	&ConfiguracaoAplicativo{},    // depende de TipoIntegracao, ModeloTerminal, Aplicativo
+	&VersaoAplicativo{},          // depende de Configuracao, Imagem
+	&HistoricoPerfilAplicativo{}, // depende de Aplicativo, Contato, DetalhesAplicativo
+	&Estagio{},                   // base para CatalogoAplicativo
+	&CatalogoAplicativo{},        // depende de TipoIntegracao, ModeloTerminal, Estagio, Aplicativo, VersaoAplicativo, Cadastro
 }

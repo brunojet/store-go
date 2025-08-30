@@ -7,4 +7,4 @@ type Imagem struct {
 	VersoesAplicativo []VersaoAplicativo `gorm:"foreignKey:IdImagem"`
 }
 
-func (Imagem) TableName() string { return "imagem" }
+func (Imagem) TableName() string { return "img" }
