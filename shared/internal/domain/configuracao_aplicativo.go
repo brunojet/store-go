@@ -2,12 +2,12 @@ package domain
 
 type ConfiguracaoAplicativo struct {
 	BaseModel
-	IdTipoIntegracao  int64              `gorm:"column:id_tip_itgr;not null;index;uniqueIndex:idx_cfg_unique,priority:1;index:idx_cfg_integracao_modelo,priority:1"`
+	IdTipoIntegracao  int64              `gorm:"column:id_tip_itgr;not null;index;uniqueIndex:idx_cfg_unique,priority:0;index:idx_cfg_itg_mdl,priority:1"`
 	TipoIntegracao    TipoIntegracao     `gorm:"foreignKey:IdTipoIntegracao"`
-	IdModeloTerminal  int64              `gorm:"column:id_mdl_trml;not null;index;uniqueIndex:idx_cfg_unique,priority:2;index:idx_cfg_integracao_modelo,priority:2"`
+	IdModeloTerminal  int64              `gorm:"column:id_mdl_trml;not null;index;uniqueIndex:idx_cfg_unique,priority:1;index:idx_cfg_itg_mdl,priority:0"`
 	ModeloTerminal    ModeloTerminal     `gorm:"foreignKey:IdModeloTerminal"`
-	IdAplicativo      int64              `gorm:"column:id_aplv;not null;index;uniqueIndex:idx_cfg_unique,priority:3"`
-	Aplicativo        Aplicativo         `gorm:"foreignKey:IdAplicativo"`
+	IdAplicativo      int64              `gorm:"column:id_aplv;not null;index;uniqueIndex:idx_cfg_unique,priority:2"`
+	Aplicativo        Aplicativo         `gorm:"foreignKey:IdAplicativo;index"`
 	VersoesAplicativo []VersaoAplicativo `gorm:"foreignKey:IdConfiguracaoAplicativo"`
 }
 
