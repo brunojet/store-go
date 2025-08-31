@@ -31,7 +31,7 @@ Informações de contato associadas a um aplicativo. Base para HistoricoPerfilAp
 ---
 
 ## Aplicativo
-Entidade principal que representa um aplicativo cadastrado na loja. Base para AppCategoria, ConfiguracaoAplicativo, HistoricoPerfilAplicativo, CatalogoAplicativo.
+Entidade principal que representa um aplicativo cadastrado na loja. Possui relacionamentos diretos com HistoricoPerfilAplicativo e ConfiguracaoAplicativo, refletindo o histórico de perfis e as configurações vinculadas ao aplicativo. Base para CatalogoAplicativo.
 
 ---
 
