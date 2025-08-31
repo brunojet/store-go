@@ -2,6 +2,8 @@ github.com/brunojet/infra-go v0.0.0-20250824220858-e70d87c5d5ef h1:IcAAVALG9g+rf
 github.com/brunojet/infra-go v0.0.0-20250824220858-e70d87c5d5ef/go.mod h1:OTcqCvVPO8JPR9V84UFwab/hTTwu4c7HXOC2viVn/3U=
 github.com/brunojet/infra-go v0.0.0 h1:HexSun8/O6Jl1F7H6/3Uj/M1tufpb54m/Vq19OPEfCA=
 github.com/brunojet/infra-go v0.0.0/go.mod h1:OTcqCvVPO8JPR9V84UFwab/hTTwu4c7HXOC2viVn/3U=
+github.com/brunojet/infra-go v0.0.1 h1:Ljt7jFEq1ns3OR8tTXFASnuVIoDDDewraCF6nRoLiDU=
+github.com/brunojet/infra-go v0.0.1/go.mod h1:OTcqCvVPO8JPR9V84UFwab/hTTwu4c7HXOC2viVn/3U=
 github.com/dustin/go-humanize v1.0.1 h1:GzkhY7T5VNhEkwH0PVJgjz+fX1rhBrR7pRT3mDkpeCY=
 github.com/dustin/go-humanize v1.0.1/go.mod h1:Mu1zIs6XwVuF/gI1OepvI0qD18qycQx+mFykh5fBlto=
 github.com/glebarez/go-sqlite v1.21.2 h1:3a6LFC4sKahUunAmynQKLZceZCOzUthkRkEAl9gAXWo=
