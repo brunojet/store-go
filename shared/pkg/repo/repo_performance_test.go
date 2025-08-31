@@ -544,19 +544,19 @@ func SolicitarPublicacaoVersaoAplicativo(db *gorm.DB) error {
 func gerarJsonAppsPorRegiao(db *gorm.DB) error {
 	consultaVersaoApp := func(db *gorm.DB, regiaoID, modeloID, integracaoID int64) ([]map[string]interface{}, error) {
 		var result []map[string]interface{}
-		err := db.Debug().Table("versao_app").
-			Select(`versao_app.nome as nome_app, versao_app.tamanho, mdl_trml.nome as modelo_terminal_nome, tip_itgr.nome as tipo_integracao_nome, cat.nome as categoria_nome, versao_app.id as id_versao`).
-			Joins("JOIN cat_app ON cat_app.id_versao_aplicativo = versao_app.id"). //Localiza a versao no catalogo
-			Joins("JOIN cfg ON cfg.id = versao_app.id_cfg_aplv").                  //Localiza a configuracao
-			Joins("JOIN cad ON cad.id = cat_app.id_cadastro").                     //Localiza o cadastro
-			Joins("JOIN cat_cad ON cat_cad.cadastro_id = cad.id").                 //M2M cadastro-categoria
-			Joins("JOIN cat ON cat.id = cat_cad.categoria_id").                    //Localiza a categoria
-			Joins("JOIN mdl_trml ON mdl_trml.id = cfg.id_modelo_terminal").        //Localiza o modelo do terminal
-			Joins("JOIN tip_itgr ON tip_itgr.id = cfg.id_tipo_integracao").        //Localiza o tipo de integração
-			Where("cfg.id_modelo_terminal = ?", modeloID).
-			Where("cfg.id_tipo_integracao = ?", integracaoID).
-			Where("cat.id = ?", regiaoID).
-			Order("versao_app.created_at DESC").
+		err := db.Debug().Table("vrs_aplv").
+			Select(`vrs_aplv.nome as nome_app, vrs_aplv.tamanho, mdl_trml.nome as modelo_terminal_nome, tip_itgr.nome as tipo_integracao_nome, ctgr.nome as categoria_nome, vrs_aplv.id as id_versao`).
+			Joins("JOIN ctlg_aplv ON ctlg_aplv.id_vrs_aplv = vrs_aplv.id").                             //Localiza a versao no catalogo
+			Joins("JOIN cfg_aplv ON cfg_aplv.id = vrs_aplv.id_cfg_aplv").                               //Localiza a configuracao
+			Joins("JOIN hist_pfl_aplv ON hist_pfl_aplv.id = ctlg_aplv.id_hist_pfl_aplv").               //Localiza o cadastro
+			Joins("JOIN ctgr_hist_pfl_aplv ON ctgr_hist_pfl_aplv.id_hist_pfl_aplv = hist_pfl_aplv.id"). //M2M cadastro-categoria
+			Joins("JOIN ctgr ON ctgr.id = ctgr_hist_pfl_aplv.id_ctgr").                                 //Localiza a categoria
+			Joins("JOIN mdl_trml ON mdl_trml.id = cfg_aplv.id_mdl_trml").                               //Localiza o modelo do terminal
+			Joins("JOIN tip_itgr ON tip_itgr.id = cfg_aplv.id_tip_itgr").                               //Localiza o tipo de integração
+			Where("cfg_aplv.id_mdl_trml = ?", modeloID).
+			Where("cfg_aplv.id_tip_itgr = ?", integracaoID).
+			Where("ctgr.id = ?", regiaoID).
+			Order("vrs_aplv.created_at DESC").
 			Scan(&result).Error
 		return result, err
 	}
@@ -568,19 +568,19 @@ func gerarJsonAppsPorRegiao(db *gorm.DB) error {
 func gerarJsonAppsPorRegiaoCatalogo(db *gorm.DB) error {
 	consultaCatalogoApp := func(db *gorm.DB, regiaoID, modeloID, integracaoID int64) ([]map[string]interface{}, error) {
 		var result []map[string]interface{}
-		err := db.Table("cat_app").
-			Select(`versao_app.nome as nome_app, versao_app.tamanho, mdl_trml.nome as modelo_terminal_nome, tip_itgr.nome as tipo_integracao_nome, cat.nome as categoria_nome, versao_app.id as id_versao`).
-			Joins("JOIN versao_app ON versao_app.id = cat_app.id_versao_aplicativo"). //Localiza a versão no catálogo
-			Joins("JOIN cfg ON cfg.id = versao_app.id_cfg_aplv").                     //Localiza a configuração
-			Joins("JOIN cad ON cad.id = cat_app.id_cadastro").                        //Localiza o cadastro
-			Joins("JOIN cat_cad ON cat_cad.cadastro_id = cad.id").                    //M2M cadastro-categoria
-			Joins("JOIN cat ON cat.id = cat_cad.categoria_id").                       //Localiza a categoria
-			Joins("JOIN mdl_trml ON mdl_trml.id = cfg.id_modelo_terminal").           //Localiza o modelo do terminal
-			Joins("JOIN tip_itgr ON tip_itgr.id = cfg.id_tipo_integracao").           //Localiza o tipo de integração
-			Where("cfg.id_modelo_terminal = ?", modeloID).
-			Where("cfg.id_tipo_integracao = ?", integracaoID).
-			Where("cat.id = ?", regiaoID).
-			Order("versao_app.created_at DESC").
+		err := db.Table("ctlg_aplv").
+			Select(`vrs_aplv.nome as nome_app, vrs_aplv.tamanho, mdl_trml.nome as modelo_terminal_nome, tip_itgr.nome as tipo_integracao_nome, ctgr.nome as categoria_nome, vrs_aplv.id as id_versao`).
+			Joins("JOIN vrs_aplv ON vrs_aplv.id = ctlg_aplv.id_vrs_aplv").                              //Localiza a versão no catálogo
+			Joins("JOIN cfg_aplv ON cfg_aplv.id = vrs_aplv.id_cfg_aplv").                               //Localiza a configuracao
+			Joins("JOIN hist_pfl_aplv ON hist_pfl_aplv.id = ctlg_aplv.id_hist_pfl_aplv").               //Localiza o cadastro
+			Joins("JOIN ctgr_hist_pfl_aplv ON ctgr_hist_pfl_aplv.id_hist_pfl_aplv = hist_pfl_aplv.id"). //M2M cadastro-categoria
+			Joins("JOIN ctgr ON ctgr.id = ctgr_hist_pfl_aplv.id_ctgr").                                 //Localiza a categoria
+			Joins("JOIN mdl_trml ON mdl_trml.id = cfg_aplv.id_mdl_trml").                               //Localiza o modelo do terminal
+			Joins("JOIN tip_itgr ON tip_itgr.id = cfg_aplv.id_tip_itgr").                               //Localiza o tipo de integração
+			Where("cfg_aplv.id_mdl_trml = ?", modeloID).
+			Where("cfg_aplv.id_tip_itgr = ?", integracaoID).
+			Where("ctgr.id = ?", regiaoID).
+			Order("vrs_aplv.created_at DESC").
 			Scan(&result).Error
 		return result, err
 	}
@@ -598,9 +598,9 @@ func gerarJsonAppsGenerico(
 ) error {
 	var idsRegioes []int64
 	db.Model(&domain.Categoria{}).
-		Joins("JOIN tip_ctgr ON tip_ctgr.id = cat.id_tip_ctgr").
+		Joins("JOIN tip_ctgr ON tip_ctgr.id = ctgr.id_tip_ctgr").
 		Where("tip_ctgr.nome = ?", "Região").
-		Pluck("cat.id", &idsRegioes)
+		Pluck("ctgr.id", &idsRegioes)
 
 	var modelos []domain.ModeloTerminal
 	db.Find(&modelos)
@@ -673,7 +673,7 @@ func TestEntrypoint(t *testing.T) {
 	}
 
 	//gerarJsonAppsPorRegiao(db)
-	//gerarJsonAppsPorRegiaoCatalogo(db)
+	gerarJsonAppsPorRegiaoCatalogo(db)
 
 	// var wg sync.WaitGroup
 	// metricasGlobal = &MetricasExecucao{} // resetar métricas
