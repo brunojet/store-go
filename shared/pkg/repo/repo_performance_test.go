@@ -528,6 +528,9 @@ func SolicitarPublicacaoVersaoAplicativo(db *gorm.DB) error {
 				if i < lenCatalogos-1 {
 					catalogoAnterior := catalogos[i+1]
 					catalogoAtual.IdVersaoAplicativo = catalogoAnterior.IdVersaoAplicativo
+					if catalogoAtual.Estagio.Nome == "Produção" {
+						catalogoAtual.IdHistoricoPerfilAplicativo = cadastro.ID
+					}
 				} else {
 					catalogoAtual.IdVersaoAplicativo = versaoAtual.ID
 				}
@@ -662,7 +665,7 @@ func TestEntrypoint(t *testing.T) {
 		CadastroEstagiosFromJSON(db)
 	}
 
-	loadVersao := false
+	loadVersao := true
 
 	if loadVersao {
 		for i := 0; i < 50; i++ {
@@ -672,19 +675,23 @@ func TestEntrypoint(t *testing.T) {
 		}
 	}
 
-	var wg sync.WaitGroup
-	metricasGlobal = &MetricasExecucao{} // resetar métricas
-	for i := 0; i < 10; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for j := 0; j < 20; j++ {
-				gerarJsonAppsPorRegiaoCatalogo(db)
-				//gerarJsonAppsPorRegiao(db)
-				time.Sleep(100 * time.Millisecond)
-			}
-		}()
+	performanceTest := false
+	if performanceTest {
+		var wg sync.WaitGroup
+		metricasGlobal = &MetricasExecucao{} // resetar métricas
+		for i := 0; i < 10; i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				for j := 0; j < 20; j++ {
+					gerarJsonAppsPorRegiaoCatalogo(db)
+					//gerarJsonAppsPorRegiao(db)
+					time.Sleep(100 * time.Millisecond)
+				}
+			}()
+		}
+		wg.Wait()
+		metricasGlobal.CalcularMetricas("gerarJsonAppsPorRegiao")
 	}
-	wg.Wait()
-	metricasGlobal.CalcularMetricas("gerarJsonAppsPorRegiao")
+
 }
