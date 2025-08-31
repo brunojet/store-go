@@ -665,7 +665,7 @@ func TestEntrypoint(t *testing.T) {
 		CadastroEstagiosFromJSON(db)
 	}
 
-	loadVersao := true
+	loadVersao := false
 
 	if loadVersao {
 		for i := 0; i < 50; i++ {
@@ -675,7 +675,7 @@ func TestEntrypoint(t *testing.T) {
 		}
 	}
 
-	performanceTest := false
+	performanceTest := true
 	if performanceTest {
 		var wg sync.WaitGroup
 		metricasGlobal = &MetricasExecucao{} // resetar métricas
@@ -684,8 +684,8 @@ func TestEntrypoint(t *testing.T) {
 			go func() {
 				defer wg.Done()
 				for j := 0; j < 20; j++ {
-					gerarJsonAppsPorRegiaoCatalogo(db)
-					//gerarJsonAppsPorRegiao(db)
+					//gerarJsonAppsPorRegiaoCatalogo(db)
+					gerarJsonAppsPorRegiao(db)
 					time.Sleep(100 * time.Millisecond)
 				}
 			}()
