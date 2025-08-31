@@ -662,11 +662,11 @@ func TestEntrypoint(t *testing.T) {
 		CadastroEstagiosFromJSON(db)
 	}
 
-	loadVersao := true
+	loadVersao := false
 
 	if loadVersao {
-		for i := 0; i < 100; i++ {
-			//SolicitarCadastroAplicativo(db)
+		for i := 0; i < 50; i++ {
+			SolicitarCadastroAplicativo(db)
 			SolicitarCadastroVersaoAplicativo(db)
 			SolicitarPublicacaoVersaoAplicativo(db)
 		}

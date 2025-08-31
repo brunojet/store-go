@@ -16,4 +16,4 @@ type VersaoAplicativo struct {
 	Imagem                   Imagem                 `gorm:"foreignKey:IdImagem;references:ID"`
 }
 
-func (VersaoAplicativo) TableName() string { return "vrs_app" }
+func (VersaoAplicativo) TableName() string { return "vrs_aplv" }
