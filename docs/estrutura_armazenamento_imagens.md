@@ -31,6 +31,9 @@ app_images/aplicativo/{nome_aplicativo}/banners/{hash_imagem}/{thumb|pequeno|med
 
 ## Observações
 
+## Referências
+- [AWS Lambda@Edge e CloudFront - Documentação Oficial](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/lambda-at-the-edge.html)
+
 ## Exemplos de Estrutura
 
 ### Ícones
