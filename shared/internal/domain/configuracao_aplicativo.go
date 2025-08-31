@@ -7,7 +7,7 @@ type ConfiguracaoAplicativo struct {
 	IdModeloTerminal  int64              `gorm:"column:id_mdl_trml;not null;index;uniqueIndex:idx_cfg_unique,priority:1;index:idx_cfg_itg_mdl,priority:0"`
 	ModeloTerminal    ModeloTerminal     `gorm:"foreignKey:IdModeloTerminal"`
 	IdAplicativo      int64              `gorm:"column:id_aplv;not null;index;uniqueIndex:idx_cfg_unique,priority:2"`
-	Aplicativo        Aplicativo         `gorm:"foreignKey:IdAplicativo;index"`
+	Aplicativo        Aplicativo         `gorm:"foreignKey:IdAplicativo"`
 	VersoesAplicativo []VersaoAplicativo `gorm:"foreignKey:IdConfiguracaoAplicativo"`
 }
 

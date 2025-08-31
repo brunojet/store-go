@@ -442,7 +442,7 @@ func SolicitarCadastroVersaoAplicativo(db *gorm.DB) error {
 					Anexo: domain.Anexo{
 						Nome:          fmt.Sprintf("Imagem da versão %s do aplicativo %s", nomeVersao, app.Nome),
 						TipoMime:      "image/png",
-						MD5:           "d41d8cd98f00b204e9800998ecf8427e",
+						SHA256:        "d41d8cd98f00b204e9800998ecf8427e",
 						Tamanho:       2048,
 						Armazenamento: "S3",
 						Caminho:       fmt.Sprintf("apps/%d/%s/icon.png", app.ID, nomeVersao),
