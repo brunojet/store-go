@@ -544,8 +544,8 @@ func SolicitarPublicacaoVersaoAplicativo(db *gorm.DB) error {
 func gerarJsonAppsPorRegiao(db *gorm.DB) error {
 	consultaVersaoApp := func(db *gorm.DB, regiaoID, modeloID, integracaoID int64) ([]map[string]interface{}, error) {
 		var result []map[string]interface{}
-		err := db.Debug().Table("vrs_aplv").
-			Select(`vrs_aplv.nome as nome_app, vrs_aplv.tamanho, mdl_trml.nome as modelo_terminal_nome, tip_itgr.nome as tipo_integracao_nome, ctgr.nome as categoria_nome, vrs_aplv.id as id_versao`).
+		err := db.Table("vrs_aplv").
+			Select(`vrs_aplv.nome as nome_app, vrs_aplv.tamanho, vrs_aplv.id as id_versao, mdl_trml.nome as modelo_terminal_nome, tip_itgr.nome as tipo_integracao_nome, ctgr.nome as categoria_nome`).
 			Joins("JOIN ctlg_aplv ON ctlg_aplv.id_vrs_aplv = vrs_aplv.id").                             //Localiza a versao no catalogo
 			Joins("JOIN cfg_aplv ON cfg_aplv.id = vrs_aplv.id_cfg_aplv").                               //Localiza a configuracao
 			Joins("JOIN hist_pfl_aplv ON hist_pfl_aplv.id = ctlg_aplv.id_hist_pfl_aplv").               //Localiza o cadastro
@@ -569,9 +569,9 @@ func gerarJsonAppsPorRegiaoCatalogo(db *gorm.DB) error {
 	consultaCatalogoApp := func(db *gorm.DB, regiaoID, modeloID, integracaoID int64) ([]map[string]interface{}, error) {
 		var result []map[string]interface{}
 		err := db.Table("ctlg_aplv").
-			Select(`vrs_aplv.nome as nome_app, vrs_aplv.tamanho, mdl_trml.nome as modelo_terminal_nome, tip_itgr.nome as tipo_integracao_nome, ctgr.nome as categoria_nome, vrs_aplv.id as id_versao`).
+			Select(`vrs_aplv.nome as nome_app, vrs_aplv.tamanho, vrs_aplv.id as id_versao, mdl_trml.nome as modelo_terminal_nome, tip_itgr.nome as tipo_integracao_nome, ctgr.nome as categoria_nome`).
 			Joins("JOIN vrs_aplv ON vrs_aplv.id = ctlg_aplv.id_vrs_aplv").                              //Localiza a versão no catálogo
-			Joins("JOIN cfg_aplv ON cfg_aplv.id = vrs_aplv.id_cfg_aplv").                               //Localiza a configuracao
+			Joins("JOIN cfg_aplv ON cfg_aplv.id = ctlg_aplv.id_cfg_aplv").                              //Localiza a configuracao
 			Joins("JOIN hist_pfl_aplv ON hist_pfl_aplv.id = ctlg_aplv.id_hist_pfl_aplv").               //Localiza o cadastro
 			Joins("JOIN ctgr_hist_pfl_aplv ON ctgr_hist_pfl_aplv.id_hist_pfl_aplv = hist_pfl_aplv.id"). //M2M cadastro-categoria
 			Joins("JOIN ctgr ON ctgr.id = ctgr_hist_pfl_aplv.id_ctgr").                                 //Localiza a categoria
@@ -672,21 +672,19 @@ func TestEntrypoint(t *testing.T) {
 		}
 	}
 
-	//gerarJsonAppsPorRegiao(db)
-	gerarJsonAppsPorRegiaoCatalogo(db)
-
-	// var wg sync.WaitGroup
-	// metricasGlobal = &MetricasExecucao{} // resetar métricas
-	// for i := 0; i < 10; i++ {
-	// 	wg.Add(1)
-	// 	go func() {
-	// 		defer wg.Done()
-	// 		for j := 0; j < 20; j++ {
-	// 			gerarJsonAppsPorRegiaoCatalogo(db)
-	// 			time.Sleep(100 * time.Millisecond)
-	// 		}
-	// 	}()
-	// }
-	// wg.Wait()
-	// metricasGlobal.CalcularMetricas("gerarJsonAppsPorRegiao")
+	var wg sync.WaitGroup
+	metricasGlobal = &MetricasExecucao{} // resetar métricas
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for j := 0; j < 20; j++ {
+				gerarJsonAppsPorRegiaoCatalogo(db)
+				//gerarJsonAppsPorRegiao(db)
+				time.Sleep(100 * time.Millisecond)
+			}
+		}()
+	}
+	wg.Wait()
+	metricasGlobal.CalcularMetricas("gerarJsonAppsPorRegiao")
 }
