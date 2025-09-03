@@ -106,3 +106,58 @@ A loja só exige e valida dados obrigatórios quando o aplicativo for publicado 
 1. Após o término do piloto e o mesmo aprovado, o desenvolvedor pode solicitar a distribuição da versão do aplicativo para a loja pública.
 2. O portal dev envia a solicitação para a loja pública e esta aponta a versão do aplicativo para o estágio de produção.
 3. A versão do aplicativo é disponibilizada para todos os usuários na loja pública.
+
+```mermaid
+---
+config:
+  layout: elk
+---
+flowchart TB
+ subgraph Detalhes["Detalhes aplicativo"]
+        P["Histórico versões<br>Descrição<br>Screenshots<br>Contatos<br>Categorias associadas"]
+  end
+ subgraph L400_TEF["L400 TEF com.pacote1"]
+        LT["Histórico versões<br>Nome<br>Icone<br>Nome versão<br>Número versão<br>ID versão MDM"]
+  end
+ subgraph L400_RFAL["L400 RFAL com.pacote2"]
+        LR["Histórico versões<br>Nome<br>Icone<br>Nome versão<br>Número versão<br>ID versão MDM"]
+  end
+ subgraph S350_TEF["S350 TEF com.pacote"]
+        ST["Histórico versões<br>Nome<br>Icone<br>Nome versão<br>Número versão<br>ID versão MDM"]
+  end
+ subgraph S350_RFAL["S350 RFAL com.pacote"]
+        SR["Histórico versões<br>Nome<br>Icone<br>Nome versão<br>Número versão<br>ID versão MDM"]
+  end
+ subgraph Configuracoes["Configuracoes"]
+        L400_TEF
+        L400_RFAL
+        S350_TEF
+        S350_RFAL
+  end
+ subgraph Aplicativo["Aplicativo"]
+        DADOS[Nome Aplicativo<br>ID parceiro<br>ID produto<br>ID aplicativo MDM]
+        Detalhes
+        Configuracoes
+  end
+  subgraph Categorias
+    Regiao
+    Ramos
+    Subramos
+    Outros...
+  end
+ subgraph Catalogo["Catalogo"]
+        Configuracao["Configuração"]
+        Estagio["Estagio"]
+        Detalhe["Detalhe"]
+        Versao["Versao"]
+  end
+    Categorias --> Detalhes
+    Detalhes --> Catalogo
+    Configuracoes --> Catalogo
+    P@{ shape: processes}
+    LT@{ shape: processes}
+    LR@{ shape: processes}
+    ST@{ shape: processes}
+    SR@{ shape: processes}
+
+```
