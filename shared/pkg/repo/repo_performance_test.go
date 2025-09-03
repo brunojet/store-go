@@ -684,8 +684,8 @@ func TestEntrypoint(t *testing.T) {
 			go func() {
 				defer wg.Done()
 				for j := 0; j < 20; j++ {
-					//gerarJsonAppsPorRegiaoCatalogo(db)
-					gerarJsonAppsPorRegiao(db)
+					gerarJsonAppsPorRegiaoCatalogo(db)
+					//gerarJsonAppsPorRegiao(db)
 					time.Sleep(100 * time.Millisecond)
 				}
 			}()
