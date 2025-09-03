@@ -1,5 +1,7 @@
 github.com/brunojet/infra-go v0.0.1 h1:Ljt7jFEq1ns3OR8tTXFASnuVIoDDDewraCF6nRoLiDU=
 github.com/brunojet/infra-go v0.0.1/go.mod h1:OTcqCvVPO8JPR9V84UFwab/hTTwu4c7HXOC2viVn/3U=
+github.com/chai2010/webp v1.4.0 h1:6DA2pkkRUPnbOHvvsmGI3He1hBKf/bkRlniAiSGuEko=
+github.com/chai2010/webp v1.4.0/go.mod h1:0XVwvZWdjjdxpUEIf7b9g9VkHFnInUSYujwqTLEuldU=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

@@ -2,7 +2,6 @@ package imageutil
 
 import (
 	"bytes"
-
 	"image"
 
 	"github.com/disintegration/imaging"

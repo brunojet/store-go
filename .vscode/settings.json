@@ -1,3 +1,7 @@
 {
-    "go.testTimeout": "300s"
+    "go.testTimeout": "300s",
+    "terminal.integrated.env.windows": {
+        "CGO_CFLAGS": "-IC:/Projects/tools/libwebp/1.6.0-windows-x64/include",
+        "CGO_LDFLAGS": "-LC:/Projects/tools/libwebp/1.6.0-windows-x64/lib -lwebp"
+    }
 }
