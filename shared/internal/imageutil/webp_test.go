@@ -39,7 +39,17 @@ func TestResizeImageToWebP(t *testing.T) {
 			t.Errorf("Erro ao redimensionar para %s: %v", sz.nome, err)
 			continue
 		}
-		outPath := "testdata/test_image_" + sz.nome + ".png"
+		outDir := "tmp"
+		absPath, err := os.Getwd()
+		if err != nil {
+			t.Errorf("Erro ao obter diretório atual: %v", err)
+		} else {
+			t.Logf("Caminho absoluto: %s", absPath+"/"+outDir+"/test_image_"+sz.nome+".png")
+		}
+		if err := os.MkdirAll(outDir, 0755); err != nil {
+			t.Fatalf("Erro ao criar diretório %s: %v", outDir, err)
+		}
+		outPath := outDir + "/test_image_" + sz.nome + ".png"
 		err = os.WriteFile(outPath, out, 0644)
 		if err != nil {
 			t.Errorf("Erro ao salvar %s: %v", outPath, err)
