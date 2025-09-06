@@ -22,6 +22,11 @@ func Bootstrap() (*service.CategoryService, *service.CategoryTypeService, error)
 		}
 	}
 
+	// Executar pós-migrações para entidades que implementam PostMigratable
+	if err := domain.RunPostMigrations(db); err != nil {
+		return nil, nil, err
+	}
+
 	// construct repositories using shared public constructors
 	catRepo := repo.NewCategoryRepo(db)
 	tcRepo := repo.NewCategoryTypeRepo(db)

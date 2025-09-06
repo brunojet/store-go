@@ -6,8 +6,8 @@ import (
 	"gorm.io/gorm"
 )
 
-func TestVersaoAplicativo_TableName_And_BeforeCreate(t *testing.T) {
-	var v VersaoAplicativo
+func TestVersaoApplication_TableName_And_BeforeCreate(t *testing.T) {
+	var v ApplicationVersion
 	if got := v.TableName(); got == "" {
 		t.Fatalf("TableName() returned empty string")
 	}

@@ -2,8 +2,8 @@ package domain
 
 import "testing"
 
-func TestTipoIntegracao_TableName(t *testing.T) {
-	var v TipoIntegracao
+func TestConfiguracao_TableName(t *testing.T) {
+	var v ApplicationConfiguration
 	if got := v.TableName(); got == "" {
 		t.Fatalf("TableName() returned empty string")
 	}

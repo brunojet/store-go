@@ -7,6 +7,7 @@ package domain
 import (
 	infra "github.com/brunojet/infra-go/pkg/domain"
 	id "github.com/brunojet/store-go/shared/internal/domain"
+	"gorm.io/gorm"
 )
 
 // Exportação das principais entidades para uso externo
@@ -15,17 +16,16 @@ type BaseEntity = infra.BaseEntity
 type Anexo = infra.Anexo
 type CategoryType = id.CategoryType
 type Category = id.Category
-type TipoIntegracao = id.TipoIntegracao
+type IntegrationType = id.IntegrationType
 type TerminalModel = id.TerminalModel
-type Imagem = id.Imagem
-type ContatoAplicativo = id.ContatoAplicativo
-type Aplicativo = id.Aplicativo
-type DetalheAplicativo = id.DetalheAplicativo
-type ConfiguracaoAplicativo = id.ConfiguracaoAplicativo
-type VersaoAplicativo = id.VersaoAplicativo
-type HistoricoPerfilAplicativo = id.HistoricoPerfilAplicativo
+type ApplicationContact = id.ApplicationContact
+type Application = id.Application
+type ApplicationDetail = id.ApplicationDetail
+type ApplicationConfiguration = id.ApplicationConfiguration
+type ApplicationProfileHistory = id.ApplicationProfileHistory
+type ApplicationVersion = id.ApplicationVersion
 type Estagio = id.Estagio
-type CatalogoAplicativo = id.CatalogoAplicativo
+type ApplicationCatalog = id.ApplicationCatalog
 type StorageObject = id.StorageObject
 type Image = id.Image
 type ImageType = id.ImageType
@@ -33,20 +33,33 @@ type Video = id.Video
 type VideoType = id.VideoType
 
 var EntidadesAutoMigrate = []interface{}{
-	&StorageObject{},             // base para Image, Video
-	&Image{},                     // depende de StorageObject
-	&Video{},                     // depende de StorageObject
-	&CategoryType{},              // base para Category
-	&Category{},                  // depende de CategoryType
-	&TipoIntegracao{},            // base para Configuracao, CatalogoAplicativo
-	&TerminalModel{},             // base para Configuracao, CatalogoAplicativo
-	&Imagem{},                    // base para VersaoAplicativo
-	&ContatoAplicativo{},         // base para Cadastro
-	&Aplicativo{},                // base para AppCategory, Configuracao, Cadastro, CatalogoAplicativo
-	&DetalheAplicativo{},         // pode ser compartilhado entre vários cadastros
-	&ConfiguracaoAplicativo{},    // depende de TipoIntegracao, TerminalModel, Aplicativo
-	&VersaoAplicativo{},          // depende de Configuracao, Imagem
-	&HistoricoPerfilAplicativo{}, // depende de Aplicativo, Contato, DetalhesAplicativo
-	&Estagio{},                   // base para CatalogoAplicativo
-	&CatalogoAplicativo{},        // depende de TipoIntegracao, TerminalModel, Estagio, Aplicativo, VersaoAplicativo, Cadastro
+	&StorageObject{},            // base para Image, Video
+	&Image{},                    // depende de StorageObject
+	&Video{},                    // depende de StorageObject
+	&IntegrationType{},          // base para Configuracao, CatalogoApplication
+	&TerminalModel{},            // base para Configuracao, CatalogoApplication
+	&Application{},              // base para AppCategory, Configuracao, Cadastro, CatalogoApplication
+	&ApplicationConfiguration{}, // depende de IntegrationType, TerminalModel, Application
+	&ApplicationCatalog{},       // depende de ApplicationConfiguration + hook para FK
+	// &CategoryType{},              // base para Category
+	// &Category{},                  // depende de CategoryType
+	&ApplicationProfileHistory{}, // depende de ApplicationContact, ApplicationDetail, Category, ApplicationConfiguration
+	&ApplicationVersion{},        // depende de Application
+}
+
+// PostMigratable interface para entidades que precisam de setup pós-migração
+type PostMigratable interface {
+	PostMigrate(db *gorm.DB) error
+}
+
+// RunPostMigrations executa PostMigrate para todas as entidades que implementam a interface
+func RunPostMigrations(db *gorm.DB) error {
+	for _, entidade := range EntidadesAutoMigrate {
+		if postMigratable, ok := entidade.(PostMigratable); ok {
+			if err := postMigratable.PostMigrate(db); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
