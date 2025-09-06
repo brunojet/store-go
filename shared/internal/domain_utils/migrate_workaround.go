@@ -42,7 +42,11 @@ func CreatePrimaryKey(db *gorm.DB, tableName, constraintName string, pkFields []
 	return nil
 }
 
-func CreateConstraints(db *gorm.DB, tableName, tableNameReference, constraintName string, fkFields []string) error {
+func CreateConstraints(db *gorm.DB, tableName, tableNameReference, constraintName string, fkFields []string, onDelete string, onUpdate string) error {
+	return CreateConstraintsWithTargetFields(db, tableName, tableNameReference, constraintName, fkFields, fkFields, onDelete, onUpdate)
+}
+
+func CreateConstraintsWithTargetFields(db *gorm.DB, tableName, tableNameReference, constraintName string, fkFields []string, targetFields []string, onDelete string, onUpdate string) error {
 	dialect := db.Dialector.Name()
 	var exists bool
 	var checkSQL string
@@ -75,11 +79,12 @@ func CreateConstraints(db *gorm.DB, tableName, tableNameReference, constraintNam
 	}
 
 	fkFieldsStr := strings.Join(fkFields, ", ")
+	targetFieldsStr := strings.Join(targetFields, ", ")
 
 	sql := fmt.Sprintf(`ALTER TABLE %s ADD CONSTRAINT %s
 		FOREIGN KEY (%s)
 		REFERENCES %s(%s)
-		ON DELETE RESTRICT ON UPDATE RESTRICT`, tableName, constraintName, fkFieldsStr, tableNameReference, fkFieldsStr)
+		ON DELETE %s ON UPDATE %s`, tableName, constraintName, fkFieldsStr, tableNameReference, targetFieldsStr, onDelete, onUpdate)
 	if err := db.Exec(sql).Error; err != nil {
 		return fmt.Errorf("erro ao criar FK composta: %w", err)
 	}
@@ -108,6 +113,48 @@ func RecreateTable(db *gorm.DB, tableName, createTable string, columns []string)
 		if err := db.Exec(sql).Error; err != nil {
 			return fmt.Errorf("erro ao executar passo da recriação da tabela: %w (sql: %s)", err, sql)
 		}
+	}
+	return nil
+}
+
+// CreateManyToManyJoinTable creates a join table with composite PK and FKs for many-to-many relations.
+// columns: slice of column DDLs (e.g., "application_profile_history_id BIGINT NOT NULL")
+// pk: slice of PK column names
+// fks: slice of FK DDLs (e.g., "FOREIGN KEY (...) REFERENCES ... ON DELETE ...")
+func CreateManyToManyJoinTable(db *gorm.DB, tableName string, columns []string, pk []string, fks []string) error {
+	dialect := db.Dialector.Name()
+	var idType string
+	switch dialect {
+	case "sqlite":
+		idType = "INTEGER"
+	case "postgres", "mysql":
+		idType = "BIGINT"
+	default:
+		return fmt.Errorf("dialeto não suportado para criação manual da tabela many-to-many")
+	}
+
+	// Compose columns with correct type
+	cols := make([]string, len(columns))
+	for i, c := range columns {
+		cols[i] = fmt.Sprintf(c, idType)
+	}
+
+	pkStr := ""
+	if len(pk) > 0 {
+		pkStr = fmt.Sprintf(", PRIMARY KEY (%s)", strings.Join(pk, ", "))
+	}
+
+	fkStr := ""
+	if len(fks) > 0 {
+		fkStr = ", " + strings.Join(fks, ", ")
+	}
+
+	tableSQL := fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
+		%s%s%s
+	)`, tableName, strings.Join(cols, ",\n\t\t"), pkStr, fkStr)
+
+	if err := db.Exec(tableSQL).Error; err != nil {
+		return fmt.Errorf("erro ao criar tabela de junção many-to-many: %w", err)
 	}
 	return nil
 }

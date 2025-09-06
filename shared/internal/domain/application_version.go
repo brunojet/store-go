@@ -13,7 +13,7 @@ const (
 	ApplicationVersionTableName = "application_version"
 )
 
-type ApplicationVersion struct {
+type ApplicationVersionHistory struct {
 	BaseEntity
 	ApplicationId            int64                    `gorm:"column:application_id;index:ak_app_ver_u0,priority:0"`
 	IntegrationTypeId        int64                    `gorm:"column:integration_type_id;index:ak_app_ver_u0,priority:1"`
@@ -29,19 +29,19 @@ type ApplicationVersion struct {
 	ApplicationConfiguration ApplicationConfiguration `gorm:"-:migration;foreignKey:ApplicationId,IntegrationTypeId,TerminalModelId;references:ApplicationId,IntegrationTypeId,TerminalModelId"`
 }
 
-func (ApplicationVersion) TableName() string { return ApplicationVersionTableName }
+func (ApplicationVersionHistory) TableName() string { return ApplicationVersionTableName }
 
 // O método PostMigrate é necessário para garantir PK e criar a FK composta manualmente devido à limitação do GORM.
-func (ApplicationVersion) PostMigrate(db *gorm.DB) error {
+func (ApplicationVersionHistory) PostMigrate(db *gorm.DB) error {
 	dialect := db.Dialector.Name()
 	switch dialect {
 	// Added missing opening curly brace for switch block
 	case "sqlite":
-		if err := (ApplicationVersion{}).recreateTableSql(db); err != nil {
+		if err := (ApplicationVersionHistory{}).recreateTableSql(db); err != nil {
 			return err
 		}
 	case "postgres", "mysql":
-		if err := (ApplicationVersion{}).createConstraints(db); err != nil {
+		if err := (ApplicationVersionHistory{}).createConstraints(db); err != nil {
 			return err
 		}
 	default:
@@ -50,17 +50,19 @@ func (ApplicationVersion) PostMigrate(db *gorm.DB) error {
 	return nil
 }
 
-func (ApplicationVersion) createConstraints(db *gorm.DB) error {
+func (ApplicationVersionHistory) createConstraints(db *gorm.DB) error {
 	return domain_tools.CreateConstraints(
 		db,
 		ApplicationVersionTableName,
 		"application_configuration",
 		"fk_application_configuration",
 		[]string{"application_id", "integration_type_id", "terminal_model_id"},
+		"RESTRICT",
+		"RESTRICT",
 	)
 }
 
-func (ApplicationVersion) recreateTableSql(db *gorm.DB) error {
+func (ApplicationVersionHistory) recreateTableSql(db *gorm.DB) error {
 	dialect := db.Dialector.Name()
 	var idType, autoInc, timeType string
 	if dialect != "sqlite" {

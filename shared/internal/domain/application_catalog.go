@@ -18,12 +18,18 @@ const (
 )
 
 type ApplicationCatalog struct {
-	IntegrationTypeId        int64                    `gorm:"primaryKey,priority:0;index:ak_app_ctlg_u0,priority:3;not null;column:integration_type_id"`
-	TerminalModelId          int64                    `gorm:"primaryKey,priority:1;index:ak_app_ctlg_u0,priority:2;not null;column:terminal_model_id"`
-	Stage                    Stage                    `gorm:"primaryKey,priority:2;index:ak_app_ctlg_u0,priority:1;not null;column:stage"`
-	ApplicationId            int64                    `gorm:"primaryKey,priority:3;index:ak_app_ctlg_u0,priority:0;not null;column:application_id"`
-	Ativo                    *bool                    `gorm:"index;default:false" json:"ativo"`
-	ApplicationConfiguration ApplicationConfiguration `gorm:"-:migration;foreignKey:ApplicationId,IntegrationTypeId,TerminalModelId;references:ApplicationId,IntegrationTypeId,TerminalModelId"`
+	IntegrationTypeId    int64  `gorm:"primaryKey,priority:0;index:ak_app_ctlg_u0,priority:3;not null;column:integration_type_id"`
+	TerminalModelId      int64  `gorm:"primaryKey,priority:1;index:ak_app_ctlg_u0,priority:2;not null;column:terminal_model_id"`
+	Stage                Stage  `gorm:"primaryKey,priority:2;index:ak_app_ctlg_u0,priority:1;not null;column:stage;check:stage IN (0,10,20,30)"`
+	ApplicationId        int64  `gorm:"primaryKey,priority:3;index:ak_app_ctlg_u0,priority:0;not null;column:application_id"`
+	ApplicationProfileId *int64 `gorm:"not null;column:application_profile_id"`
+	ApplicationVersionId *int64 `gorm:"not null;column:application_version_id"`
+	Ativo                *bool  `gorm:"index;default:false" json:"ativo"`
+
+	// Relacionamentos
+	ApplicationConfiguration ApplicationConfiguration  `gorm:"-:migration;foreignKey:ApplicationId,IntegrationTypeId,TerminalModelId;references:ApplicationId,IntegrationTypeId,TerminalModelId"`
+	ApplicationProfile       ApplicationProfileHistory `gorm:"foreignKey:ApplicationProfileId;references:ID"`
+	ApplicationVersion       ApplicationVersionHistory `gorm:"foreignKey:ApplicationVersionId;references:ID"`
 }
 
 func (ApplicationCatalog) TableName() string { return ApplicationCatalogTableName }
@@ -57,15 +63,19 @@ func (ApplicationCatalog) recreateTable(db *gorm.DB) error {
 		terminal_model_id %s NOT NULL,
 		stage SMALLINT NOT NULL,
 		application_id %s NOT NULL,
+		application_profile_id %s NOT NULL,
+		application_version_id %s NOT NULL,
 		ativo %s DEFAULT FALSE
 	);`,
+		idType,
+		idType,
 		idType,
 		idType,
 		idType,
 		boolType,
 	)
 
-	columns := []string{"integration_type_id", "terminal_model_id", "stage", "application_id", "ativo"}
+	columns := []string{"integration_type_id", "terminal_model_id", "stage", "application_id", "application_profile_id", "application_version_id", "ativo"}
 
 	return domain_tools.RecreateTable(db, ApplicationCatalogTableName, createTable, columns)
 }
@@ -86,5 +96,7 @@ func (ApplicationCatalog) createConstraints(db *gorm.DB) error {
 		"application_configuration",
 		"fk_app_catalog_config",
 		[]string{"application_id", "integration_type_id", "terminal_model_id"},
+		"RESTRICT",
+		"RESTRICT",
 	)
 }

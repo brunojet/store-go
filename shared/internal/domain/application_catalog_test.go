@@ -1,41 +1,16 @@
 package domain_test
 
 import (
-	"database/sql"
+	// "database/sql"
 	"testing"
 
 	"github.com/brunojet/store-go/shared/internal/domain"
-	"gorm.io/driver/sqlite"
+	"gorm.io/driver/postgres"
+
+	// _ "github.com/lib/pq"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	_ "modernc.org/sqlite"
-)
-
-// Remove invalid type aliases for constants; use domain.Stage and domain.StageDevelopment, etc. directly in tests.
-
-var (
-	ApplicationCatalogPkKeys = []string{"integration_type_id", "terminal_model_id", "stage", "application_id"}
-)
-
-const (
-	ApplicationCatalogFkName         = "fk_application_catalog_configuration"
-	ApplicationCatalogCreateTableSQL = `CREATE TABLE application_catalog (
-	application_id INTEGER NOT NULL,
-	ativo numeric,
-	integration_type_id INTEGER NOT NULL,
-	terminal_model_id INTEGER NOT NULL,
-	stage INTEGER NOT NULL,
-	PRIMARY KEY (integration_type_id, terminal_model_id, stage, application_id),
-	CONSTRAINT fk_application_catalog_configuration
-		FOREIGN KEY (application_id, integration_type_id, terminal_model_id)
-		REFERENCES application_configuration(application_id, integration_type_id, terminal_model_id)
-		ON DELETE RESTRICT ON UPDATE RESTRICT
-	)`
-	ApplicationCatalogAlterTableSQL = `ALTER TABLE application_catalog 
-		   ADD CONSTRAINT fk_application_catalog_configuration 
-		   FOREIGN KEY (application_id, integration_type_id, terminal_model_id) 
-		   REFERENCES application_configuration(application_id, integration_type_id, terminal_model_id) 
-		   ON DELETE RESTRICT ON UPDATE RESTRICT`
 )
 
 func TestApplicationCatalog_TableName(t *testing.T) {
@@ -47,33 +22,60 @@ func TestApplicationCatalog_TableName(t *testing.T) {
 }
 
 func setupTestDBWithCatalog(t *testing.T) *gorm.DB {
-	sqlDB, err := sql.Open("sqlite", ":memory:")
-	if err != nil {
-		t.Fatalf("Failed to open sqlite: %v", err)
-	}
 
-	db, err := gorm.Open(sqlite.New(sqlite.Config{
-		Conn: sqlDB,
-	}), &gorm.Config{
+	// --- AJUSTE TEMPORÁRIO PARA USAR POSTGRES REAL ---
+	dsn := "host=localhost user=postgres password=postgres dbname=postgres port=5432 sslmode=disable search_path=store_go"
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})
 	if err != nil {
-		t.Fatalf("Failed to connect to database: %v", err)
+		t.Fatalf("Failed to connect to postgres: %v", err)
 	}
+	// --- FIM DO AJUSTE TEMPORÁRIO ---
 
-	err = db.AutoMigrate(&domain.ApplicationConfiguration{}, &domain.ApplicationCatalog{})
+	// --- CÓDIGO ORIGINAL SQLITE (comente para reverter) ---
+	// sqlDB, err := sql.Open("sqlite", ":memory:")
+	// if err != nil {
+	//     t.Fatalf("Failed to open sqlite: %v", err)
+	// }
+	// db, err := gorm.Open(sqlite.New(sqlite.Config{
+	//     Conn: sqlDB,
+	// }), &gorm.Config{
+	//     Logger: logger.Default.LogMode(logger.Info),
+	// })
+	// if err != nil {
+	//     t.Fatalf("Failed to connect to database: %v", err)
+	// }
+
+	err = db.AutoMigrate(&domain.ApplicationConfiguration{}, &domain.ApplicationCatalog{}, &domain.Category{}, &domain.ApplicationProfileHistory{}, &domain.ApplicationProfileHistoryCategory{}, &domain.ApplicationProfileHistoryConfiguration{})
 	if err != nil {
 		t.Fatalf("Failed to migrate: %v", err)
 	}
 
 	catalog := domain.ApplicationCatalog{}
-	err = catalog.PostMigrate(db, ApplicationCatalogPkKeys, ApplicationCatalogFkName, ApplicationCatalogAlterTableSQL, ApplicationCatalogCreateTableSQL)
+	err = catalog.PostMigrate(db)
+	if err != nil {
+		t.Fatalf("PostMigrate failed: %v", err)
+	}
+	// profile := domain.ApplicationProfileHistory{}
+	// err = profile.PostMigrate(db)
+	// if err != nil {
+	// 	t.Fatalf("PostMigrate failed: %v", err)
+	// }
+
+	profileCategory := domain.ApplicationProfileHistoryCategory{}
+	err = profileCategory.PostMigrate(db)
 	if err != nil {
 		t.Fatalf("PostMigrate failed: %v", err)
 	}
 
-	// Garante que o SQLite respeite as foreign keys
-	db.Exec("PRAGMA foreign_keys = ON")
+	profileConfiguration := domain.ApplicationProfileHistoryConfiguration{}
+	err = profileConfiguration.PostMigrate(db)
+	if err != nil {
+		t.Fatalf("PostMigrate failed: %v", err)
+	}
+
+	// PRAGMAs não são necessários no Postgres
 
 	return db
 }
@@ -130,11 +132,68 @@ func TestApplicationCatalog_ForeignKeyEnforcement(t *testing.T) {
 	if err := db.Create(&acfg).Error; err != nil {
 		t.Fatalf("Failed to insert ApplicationConfiguration: %v", err)
 	}
-	acat := domain.ApplicationCatalog{
+
+	profile := domain.ApplicationProfileHistory{
+		ApplicationContact: domain.ApplicationContact{
+			BaseEntity: domain.BaseEntity{Nome: "Contato Teste"},
+			Site:       "https://site.com",
+			Email:      "contato@site.com",
+			Phone:      "11999999999",
+		},
+		ApplicationDetail: domain.ApplicationDetail{
+			Descricao: "Detalhe do perfil",
+		},
+		Categories: []domain.Category{
+			{
+				BaseEntity: domain.BaseEntity{Nome: "Categoria 1"},
+				CategoryType: domain.CategoryType{
+					BaseEntity: domain.BaseEntity{Nome: "Tipo Categoria 1"},
+				},
+			},
+			{
+				BaseEntity: domain.BaseEntity{Nome: "Categoria 2"},
+				CategoryType: domain.CategoryType{
+					BaseEntity: domain.BaseEntity{Nome: "Tipo Categoria 2"},
+				},
+			},
+		},
+	}
+	if err := db.Create(&profile).Error; err != nil {
+		t.Fatalf("Failed to insert ApplicationProfileHistory: %v", err)
+	}
+	// Associa via método em lote (mesmo com 1 elemento)
+	if err := profile.AssociateApplicationConfigurations(db, []*domain.ApplicationConfiguration{&acfg}); err != nil {
+		t.Fatalf("Failed to associate ApplicationConfiguration(s) with profile: %v", err)
+	}
+
+	version := domain.ApplicationVersionHistory{
+		BaseEntity:        domain.BaseEntity{Nome: "Versao Teste"},
+		ApplicationId:     app.ID,
 		IntegrationTypeId: it.ID,
 		TerminalModelId:   tm.ID,
-		Stage:             domain.StageDevelopment,
-		ApplicationId:     app.ID,
+		Tamanho:           123456,
+		NomeVersao:        "1.0.0",
+		Image: domain.Image{
+			StorageObject: domain.StorageObject{
+				Path:     "bucket-teste",
+				Name:     "objeto-teste",
+				MimeType: "etag-teste",
+				Status:   domain.ObjectStatusAvailable,
+			},
+		},
+	}
+
+	if err := db.Create(&version).Error; err != nil {
+		t.Fatalf("Failed to insert ApplicationVersionHistory: %v", err)
+	}
+
+	acat := domain.ApplicationCatalog{
+		IntegrationTypeId:    it.ID,
+		TerminalModelId:      tm.ID,
+		Stage:                domain.StageDevelopment,
+		ApplicationId:        app.ID,
+		ApplicationProfileId: &profile.ID,
+		ApplicationVersionId: &version.ID,
 	}
 	if err := db.Create(&acat).Error; err != nil {
 		t.Fatalf("Failed to insert ApplicationCatalog: %v", err)
@@ -156,6 +215,14 @@ func TestApplicationCatalog_ForeignKeyEnforcement(t *testing.T) {
 	// Primeiro remover domain.ApplicationCatalog
 	if err := db.Delete(&domain.ApplicationCatalog{}, "integration_type_id = ? AND terminal_model_id = ? AND application_id = ?", acat.IntegrationTypeId, acat.TerminalModelId, acat.ApplicationId).Error; err != nil {
 		t.Fatalf("Failed to delete domain.ApplicationCatalog: %v", err)
+	}
+
+	if err := db.Delete(&version).Error; err != nil {
+		t.Fatalf("Failed to delete ApplicationVersionHistory: %v", err)
+	}
+
+	if err := db.Delete(&profile).Error; err != nil {
+		t.Fatalf("Failed to delete ApplicationProfileHistory: %v", err)
 	}
 
 	// Depois ApplicationConfiguration

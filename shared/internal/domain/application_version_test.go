@@ -7,7 +7,7 @@ import (
 )
 
 func TestVersaoApplication_TableName_And_BeforeCreate(t *testing.T) {
-	var v ApplicationVersion
+	var v ApplicationVersionHistory
 	if got := v.TableName(); got == "" {
 		t.Fatalf("TableName() returned empty string")
 	}

@@ -11,8 +11,8 @@ type ApplicationConfiguration struct {
 
 	// Relação reversa N:1 - Uma Configuration tem muitos Catalogs (por Stage)
 	// -:migration evita que esta relação crie FK reversa; só ApplicationCatalog controla a FK
-	ApplicationCatalogs []ApplicationCatalog `gorm:"-:migration;foreignKey:ApplicationId,IntegrationTypeId,TerminalModelId;references:ApplicationId,IntegrationTypeId,TerminalModelId"`
-	ApplicationVersions []ApplicationVersion `gorm:"-:migration;foreignKey:ApplicationId,IntegrationTypeId,TerminalModelId;references:ApplicationId,IntegrationTypeId,TerminalModelId"`
+	ApplicationCatalogs []ApplicationCatalog        `gorm:"-:migration;foreignKey:ApplicationId,IntegrationTypeId,TerminalModelId;references:ApplicationId,IntegrationTypeId,TerminalModelId"`
+	ApplicationVersions []ApplicationVersionHistory `gorm:"-:migration;foreignKey:ApplicationId,IntegrationTypeId,TerminalModelId;references:ApplicationId,IntegrationTypeId,TerminalModelId"`
 }
 
 func (ApplicationConfiguration) TableName() string { return "application_configuration" }
