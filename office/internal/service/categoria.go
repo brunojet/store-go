@@ -7,15 +7,15 @@ import (
 	"github.com/brunojet/store-go/shared/pkg/repo"
 )
 
-type CategoriaService struct {
-	repo repo.CategoriaRepository
+type CategoryService struct {
+	repo repo.CategoryRepository
 }
 
-func NewCategoriaService(r repo.CategoriaRepository) *CategoriaService {
-	return &CategoriaService{repo: r}
+func NewCategoryService(r repo.CategoryRepository) *CategoryService {
+	return &CategoryService{repo: r}
 }
 
-func (s *CategoriaService) List(ctx context.Context, page, pageSize int) ([]domain.Categoria, error) {
+func (s *CategoryService) List(ctx context.Context, page, pageSize int) ([]domain.Category, error) {
 	params := repo.ListParams{Page: page, PageSize: pageSize}
 	return s.repo.List(ctx, params)
 }

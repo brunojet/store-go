@@ -9,7 +9,7 @@ import (
 )
 
 // Bootstrap creates services wired with infra repositories using a real Postgres DB.
-func Bootstrap() (*service.CategoriaService, *service.TipoCategoriaService, error) {
+func Bootstrap() (*service.CategoryService, *service.CategoryTypeService, error) {
 	dsn := "host=localhost user=postgres password=postgres dbname=postgres port=5432 sslmode=disable search_path=store_go"
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
@@ -23,10 +23,10 @@ func Bootstrap() (*service.CategoriaService, *service.TipoCategoriaService, erro
 	}
 
 	// construct repositories using shared public constructors
-	catRepo := repo.NewCategoriaRepo(db)
-	tcRepo := repo.NewTipoCategoriaRepo(db)
+	catRepo := repo.NewCategoryRepo(db)
+	tcRepo := repo.NewCategoryTypeRepo(db)
 
-	catSvc := service.NewCategoriaService(catRepo)
-	tcSvc := service.NewTipoCategoriaService(tcRepo)
+	catSvc := service.NewCategoryService(catRepo)
+	tcSvc := service.NewCategoryTypeService(tcRepo)
 	return catSvc, tcSvc, nil
 }

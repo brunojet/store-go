@@ -28,7 +28,7 @@ func parsePageParams(r *http.Request) (int, int) {
 }
 
 // Start launches a minimal HTTP server with two endpoints:
-// GET /categorias and GET /tip_ctgrs
+// GET /categorias and GET /category_types
 func Start(addr string) error {
 	catSvc, tcSvc, err := internal.Bootstrap()
 	if err != nil {
@@ -46,7 +46,7 @@ func Start(addr string) error {
 		_ = json.NewEncoder(w).Encode(items)
 	})
 
-	http.HandleFunc("/tip_ctgrs", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/category_types", func(w http.ResponseWriter, r *http.Request) {
 		page, pageSize := parsePageParams(r)
 		items, err := tcSvc.List(context.Background(), page, pageSize)
 		if err != nil {

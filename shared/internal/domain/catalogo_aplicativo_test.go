@@ -22,7 +22,7 @@ func TestCatalogoAplicativo_TableName(t *testing.T) {
 // 	for _, cat := range catalogos {
 // 		var cfg domain.Configuracao
 // 		err := db.Where("id_modelo_terminal = ? AND id_tipo_integracao = ? AND id_app = ?",
-// 			cat.IdModeloTerminal, cat.IdTipoIntegracao, cat.IdApp).First(&cfg).Error
+// 			cat.IdTerminalModel, cat.IdTipoIntegracao, cat.IdApp).First(&cfg).Error
 // 		if err == nil {
 // 			db.Model(&domain.CatalogoAplicativo{}).
 // 				Where("id = ?", cat.ID).

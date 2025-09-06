@@ -8,39 +8,39 @@ import (
 	"gorm.io/gorm"
 )
 
-type TipoCategoriaRepo struct {
-	rep repo.Repository[domain.TipoCategoria]
+type CategoryTypeRepo struct {
+	rep repo.Repository[domain.CategoryType]
 }
 
-func NewTipoCategoriaRepo(db *gorm.DB) *TipoCategoriaRepo {
-	return &TipoCategoriaRepo{rep: repo.NewRepository[domain.TipoCategoria](db)}
+func NewCategoryTypeRepo(db *gorm.DB) *CategoryTypeRepo {
+	return &CategoryTypeRepo{rep: repo.NewRepository[domain.CategoryType](db)}
 }
 
-func (r *TipoCategoriaRepo) Create(ctx context.Context, t *domain.TipoCategoria) error {
+func (r *CategoryTypeRepo) Create(ctx context.Context, t *domain.CategoryType) error {
 	return r.rep.Create(ctx, t)
 }
 
-func (r *TipoCategoriaRepo) Update(ctx context.Context, t *domain.TipoCategoria) error {
+func (r *CategoryTypeRepo) Update(ctx context.Context, t *domain.CategoryType) error {
 	return r.rep.Update(ctx, t)
 }
 
-func (r *TipoCategoriaRepo) GetByID(ctx context.Context, id int64) (*domain.TipoCategoria, error) {
+func (r *CategoryTypeRepo) GetByID(ctx context.Context, id int64) (*domain.CategoryType, error) {
 	return r.rep.GetByID(ctx, id)
 }
 
-func (r *TipoCategoriaRepo) List(ctx context.Context, p ListParams) ([]domain.TipoCategoria, error) {
+func (r *CategoryTypeRepo) List(ctx context.Context, p ListParams) ([]domain.CategoryType, error) {
 	ip := p.ToInfraListParams()
 	items, _, err := r.rep.ListWithParams(ctx, ip, nil)
 	return items, err
 }
 
-func (r *TipoCategoriaRepo) Delete(ctx context.Context, id int64) error {
-	return r.rep.DB().WithContext(ctx).Delete(&domain.TipoCategoria{}, id).Error
+func (r *CategoryTypeRepo) Delete(ctx context.Context, id int64) error {
+	return r.rep.DB().WithContext(ctx).Delete(&domain.CategoryType{}, id).Error
 }
 
-func (r *TipoCategoriaRepo) WithTx(tx interface{}) *TipoCategoriaRepo {
+func (r *CategoryTypeRepo) WithTx(tx interface{}) *CategoryTypeRepo {
 	if gdb, ok := tx.(*gorm.DB); ok {
-		return &TipoCategoriaRepo{rep: repo.NewRepository[domain.TipoCategoria](gdb)}
+		return &CategoryTypeRepo{rep: repo.NewRepository[domain.CategoryType](gdb)}
 	}
 	return r
 }

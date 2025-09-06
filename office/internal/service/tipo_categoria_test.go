@@ -8,32 +8,32 @@ import (
 	"github.com/brunojet/store-go/shared/pkg/repo"
 )
 
-type mockTipoCategoriaRepo struct {
+type mockCategoryTypeRepo struct {
 	receivedPage int
 	receivedSize int
 }
 
-func (m *mockTipoCategoriaRepo) List(ctx context.Context, p repo.ListParams) ([]domain.TipoCategoria, error) {
+func (m *mockCategoryTypeRepo) List(ctx context.Context, p repo.ListParams) ([]domain.CategoryType, error) {
 	m.receivedPage = p.Page
 	m.receivedSize = p.PageSize
 	// return a simple slice
-	return []domain.TipoCategoria{{}}, nil
+	return []domain.CategoryType{{}}, nil
 }
 
-func (m *mockTipoCategoriaRepo) Create(ctx context.Context, t *domain.TipoCategoria) error {
+func (m *mockCategoryTypeRepo) Create(ctx context.Context, t *domain.CategoryType) error {
 	return nil
 }
-func (m *mockTipoCategoriaRepo) Update(ctx context.Context, t *domain.TipoCategoria) error {
+func (m *mockCategoryTypeRepo) Update(ctx context.Context, t *domain.CategoryType) error {
 	return nil
 }
-func (m *mockTipoCategoriaRepo) GetByID(ctx context.Context, id int64) (*domain.TipoCategoria, error) {
-	return &domain.TipoCategoria{}, nil
+func (m *mockCategoryTypeRepo) GetByID(ctx context.Context, id int64) (*domain.CategoryType, error) {
+	return &domain.CategoryType{}, nil
 }
-func (m *mockTipoCategoriaRepo) Delete(ctx context.Context, id int64) error { return nil }
+func (m *mockCategoryTypeRepo) Delete(ctx context.Context, id int64) error { return nil }
 
-func TestTipoCategoriaService_List_forwardsParamsAndReturnsItems(t *testing.T) {
-	mock := &mockTipoCategoriaRepo{}
-	svc := NewTipoCategoriaService(mock)
+func TestCategoryTypeService_List_forwardsParamsAndReturnsItems(t *testing.T) {
+	mock := &mockCategoryTypeRepo{}
+	svc := NewCategoryTypeService(mock)
 
 	items, err := svc.List(context.Background(), 2, 50)
 	if err != nil {

@@ -103,8 +103,8 @@ func CadastroModelosTerminalFromJSON(db *gorm.DB) error {
 		return err
 	}
 	for _, be := range entidades {
-		modelo := domain.ModeloTerminal{BaseEntity: be}
-		var existing domain.ModeloTerminal
+		modelo := domain.TerminalModel{BaseEntity: be}
+		var existing domain.TerminalModel
 		if err := db.Where("nome = ?", modelo.Nome).First(&existing).Error; err != nil {
 			db.Create(&modelo)
 		}
@@ -150,7 +150,7 @@ func CadastroEstagiosFromJSON(db *gorm.DB) error {
 	return nil
 }
 
-func CadastroCategoriasFromJSONPath(db *gorm.DB, relativePath string) error {
+func CadastroCategorysFromJSONPath(db *gorm.DB, relativePath string) error {
 	baseDir := "c:/Projects/store-go/shared/testdata"
 	absPath := filepath.Join(baseDir, relativePath)
 	file, err := os.Open(absPath)
@@ -159,38 +159,38 @@ func CadastroCategoriasFromJSONPath(db *gorm.DB, relativePath string) error {
 	}
 	defer file.Close()
 
-	var root CategoriasRoot
+	var root CategorysRoot
 	decoder := json.NewDecoder(file)
 	if err := decoder.Decode(&root); err != nil {
 		return err
 	}
-	return cadastroCategoriasFromJSONRec(db, root, nil)
+	return cadastroCategorysFromJSONRec(db, root, nil)
 }
-func cadastroCategoriasFromJSONRec(db *gorm.DB, root CategoriasRoot, idPai *int64) error {
+func cadastroCategorysFromJSONRec(db *gorm.DB, root CategorysRoot, idPai *int64) error {
 	// Cadastra o tipo de categoria
-	tipoCat, err := ensureTipoCategoria(db, root.TipoCategoria)
+	tipoCat, err := ensureCategoryType(db, root.CategoryType)
 	if err != nil {
 		return err
 	}
-	for nome, raw := range root.Categorias {
+	for nome, raw := range root.Categorys {
 		// Cadastra a categoria
-		categoria := domain.Categoria{
-			BaseEntity:      domain.BaseEntity{Nome: nome, Ativo: true},
-			IdTipoCategoria: tipoCat.ID,
-			IdPai:           idPai,
+		categoria := domain.Category{
+			BaseEntity:     domain.BaseEntity{Nome: nome, Ativo: true},
+			CategoryTypeId: tipoCat.ID,
+			ParentId:       idPai,
 		}
-		var existing domain.Categoria
-		err := db.Where("nome = ? AND id_tip_ctgr = ?", nome, tipoCat.ID).First(&existing).Error
+		var existing domain.Category
+		err := db.Where("nome = ? AND category_type_id = ?", nome, tipoCat.ID).First(&existing).Error
 		if err != nil {
 			if err := db.Create(&categoria).Error; err != nil {
 				return err
 			}
 		}
 		// Verifica se há subcategorias
-		var subcat CategoriasRoot
-		if err := json.Unmarshal(raw, &subcat); err == nil && len(subcat.Categorias) > 0 {
+		var subcat CategorysRoot
+		if err := json.Unmarshal(raw, &subcat); err == nil && len(subcat.Categorys) > 0 {
 			// Busca o ID da categoria recém-cadastrada
-			if err := cadastroCategoriasFromJSONRec(db, subcat, &categoria.ID); err != nil {
+			if err := cadastroCategorysFromJSONRec(db, subcat, &categoria.ID); err != nil {
 				return err
 			}
 		}
@@ -198,15 +198,15 @@ func cadastroCategoriasFromJSONRec(db *gorm.DB, root CategoriasRoot, idPai *int6
 	return nil
 }
 
-type CategoriasRoot struct {
-	TipoCategoria string                     `json:"tipo_categoria"`
-	Categorias    map[string]json.RawMessage `json:"categorias"`
+type CategorysRoot struct {
+	CategoryType string                     `json:"tipo_categoria"`
+	Categorys    map[string]json.RawMessage `json:"categorias"`
 }
 
-func ensureTipoCategoria(db *gorm.DB, nome string) (domain.TipoCategoria, error) {
-	var tipo domain.TipoCategoria
+func ensureCategoryType(db *gorm.DB, nome string) (domain.CategoryType, error) {
+	var tipo domain.CategoryType
 	if err := db.Where("nome = ?", nome).First(&tipo).Error; err != nil {
-		tipo = domain.TipoCategoria{BaseEntity: domain.BaseEntity{Nome: nome, Ativo: true}}
+		tipo = domain.CategoryType{BaseEntity: domain.BaseEntity{Nome: nome, Ativo: true}}
 		if err := db.Create(&tipo).Error; err != nil {
 			return tipo, err
 		}
@@ -248,7 +248,7 @@ func CadastroAplicativosFromJSON(db *gorm.DB) {
 
 func CadastroConfiguraces(db *gorm.DB) {
 	// Buscar todos os modelos de terminal
-	var modelos []domain.ModeloTerminal
+	var modelos []domain.TerminalModel
 	db.Find(&modelos)
 
 	// Buscar todos os tipos de integração
@@ -268,7 +268,7 @@ func CadastroConfiguraces(db *gorm.DB) {
 				if existing.ID == 0 {
 					config := domain.ConfiguracaoAplicativo{
 						IdAplicativo:     app.ID,
-						IdModeloTerminal: modelo.ID,
+						IdTerminalModel:  modelo.ID,
 						IdTipoIntegracao: integracao.ID,
 					}
 					db.Create(&config)
@@ -278,16 +278,16 @@ func CadastroConfiguraces(db *gorm.DB) {
 	}
 }
 
-func updateCadastroCategoria(db *gorm.DB, categorias []domain.Categoria, baseModel domain.BaseModel) error {
+func updateCadastroCategory(db *gorm.DB, categorias []domain.Category, baseModel domain.BaseModel) error {
 	// Associa múltiplas categorias ao cadastro via GORM M2M
 	cadastro := domain.HistoricoPerfilAplicativo{BaseModel: baseModel}
-	if err := db.Model(&cadastro).Association("Categorias").Append(&categorias); err != nil {
+	if err := db.Model(&cadastro).Association("Categorys").Append(&categorias); err != nil {
 		return err
 	}
 	return nil
 }
 
-func associarCategoriasAoCadastro(db *gorm.DB, categorias []domain.Categoria, nomeApp string, baseModel domain.BaseModel) error {
+func associarCategorysAoCadastro(db *gorm.DB, categorias []domain.Category, nomeApp string, baseModel domain.BaseModel) error {
 	// Busca nome do app no cadastro
 	var cadastro domain.HistoricoPerfilAplicativo
 	if err := db.Where("id = ?", baseModel.ID).First(&cadastro).Error; err != nil {
@@ -307,7 +307,7 @@ func associarCategoriasAoCadastro(db *gorm.DB, categorias []domain.Categoria, no
 		return nil
 	}
 	// Acumula categorias a associar
-	var catsToAssociate []domain.Categoria
+	var catsToAssociate []domain.Category
 	// Associa regiões
 	if regioes, ok := appInfo["regioes"].([]interface{}); ok {
 		for _, reg := range regioes {
@@ -341,7 +341,7 @@ func associarCategoriasAoCadastro(db *gorm.DB, categorias []domain.Categoria, no
 		}
 	}
 	if len(catsToAssociate) > 0 {
-		if err := updateCadastroCategoria(db, catsToAssociate, baseModel); err != nil {
+		if err := updateCadastroCategory(db, catsToAssociate, baseModel); err != nil {
 			return err
 		}
 	}
@@ -358,12 +358,12 @@ func associarConfiguracaoAoCadastro(db *gorm.DB, configuracoes []domain.Configur
 }
 
 func SolicitarCadastroAplicativo(db *gorm.DB) error {
-	var tipoRegiao, tipoRamos, tipoSubRamos domain.TipoCategoria
+	var tipoRegiao, tipoRamos, tipoSubRamos domain.CategoryType
 	db.Where("nome = ?", "Região").First(&tipoRegiao)
 	db.Where("nome = ?", "Ramos").First(&tipoRamos)
 	db.Where("nome = ?", "Subramos").First(&tipoSubRamos)
-	var todasCategorias []domain.Categoria
-	db.Where("id_tip_ctgr IN ?", []int64{tipoRegiao.ID, tipoRamos.ID, tipoSubRamos.ID}).Find(&todasCategorias)
+	var todasCategorys []domain.Category
+	db.Where("category_type_id IN ?", []int64{tipoRegiao.ID, tipoRamos.ID, tipoSubRamos.ID}).Find(&todasCategorys)
 
 	var apps []domain.Aplicativo
 	db.Find(&apps)
@@ -371,7 +371,7 @@ func SolicitarCadastroAplicativo(db *gorm.DB) error {
 	for _, app := range apps {
 		// Buscar todas as configurações do app
 		var configuracoes []domain.ConfiguracaoAplicativo
-		db.Preload("ModeloTerminal", func(db *gorm.DB) *gorm.DB {
+		db.Preload("TerminalModel", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id, nome")
 		}).Preload("TipoIntegracao", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id, nome")
@@ -396,7 +396,7 @@ func SolicitarCadastroAplicativo(db *gorm.DB) error {
 		if tx := db.Create(&cadastroConfig); tx.Error != nil {
 			return tx.Error
 		}
-		if err := associarCategoriasAoCadastro(db, todasCategorias, app.Nome, cadastroConfig.BaseModel); err != nil {
+		if err := associarCategorysAoCadastro(db, todasCategorys, app.Nome, cadastroConfig.BaseModel); err != nil {
 			return err
 		}
 
@@ -600,12 +600,12 @@ func gerarJsonAppsGenerico(
 	metricas *MetricasExecucao,
 ) error {
 	var idsRegioes []int64
-	db.Model(&domain.Categoria{}).
-		Joins("JOIN tip_ctgr ON tip_ctgr.id = ctgr.id_tip_ctgr").
-		Where("tip_ctgr.nome = ?", "Região").
+	db.Model(&domain.Category{}).
+		Joins("JOIN category_type ON category_type.id = ctgr.category_type_id").
+		Where("category_type.nome = ?", "Região").
 		Pluck("ctgr.id", &idsRegioes)
 
-	var modelos []domain.ModeloTerminal
+	var modelos []domain.TerminalModel
 	db.Find(&modelos)
 	var integracoes []domain.TipoIntegracao
 	db.Find(&integracoes)
@@ -614,7 +614,7 @@ func gerarJsonAppsGenerico(
 	var totalQueries int
 	times := make([]int64, 0)
 	for _, regiaoID := range idsRegioes {
-		var regiao domain.Categoria
+		var regiao domain.Category
 		db.First(&regiao, regiaoID)
 		for _, modelo := range modelos {
 			for _, integracao := range integracoes {
@@ -656,8 +656,8 @@ func TestEntrypoint(t *testing.T) {
 	}
 	setup := false
 	if setup {
-		CadastroCategoriasFromJSONPath(db, "regioes.json")
-		CadastroCategoriasFromJSONPath(db, "ramos_subramos.json")
+		CadastroCategorysFromJSONPath(db, "regioes.json")
+		CadastroCategorysFromJSONPath(db, "ramos_subramos.json")
 		CadastroModelosTerminalFromJSON(db)
 		CadastroTiposIntegracaoFromJSON(db)
 		CadastroAplicativosFromJSON(db)

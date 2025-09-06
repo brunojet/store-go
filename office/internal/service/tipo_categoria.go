@@ -8,15 +8,15 @@ import (
 )
 
 // minimal repository interface used by the service (keeps dependency surface small)
-type TipoCategoriaService struct {
-	repo repo.TipoCategoriaRepository
+type CategoryTypeService struct {
+	repo repo.CategoryTypeRepository
 }
 
-func NewTipoCategoriaService(r repo.TipoCategoriaRepository) *TipoCategoriaService {
-	return &TipoCategoriaService{repo: r}
+func NewCategoryTypeService(r repo.CategoryTypeRepository) *CategoryTypeService {
+	return &CategoryTypeService{repo: r}
 }
 
-func (s *TipoCategoriaService) List(ctx context.Context, page, pageSize int) ([]domain.TipoCategoria, error) {
+func (s *CategoryTypeService) List(ctx context.Context, page, pageSize int) ([]domain.CategoryType, error) {
 	params := repo.ListParams{Page: page, PageSize: pageSize}
 	return s.repo.List(ctx, params)
 }

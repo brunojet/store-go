@@ -8,39 +8,39 @@ import (
 	"gorm.io/gorm"
 )
 
-type CategoriaRepo struct {
-	rep repo.Repository[domain.Categoria]
+type CategoryRepo struct {
+	rep repo.Repository[domain.Category]
 }
 
-func NewCategoriaRepo(db *gorm.DB) *CategoriaRepo {
-	return &CategoriaRepo{rep: repo.NewRepository[domain.Categoria](db)}
+func NewCategoryRepo(db *gorm.DB) *CategoryRepo {
+	return &CategoryRepo{rep: repo.NewRepository[domain.Category](db)}
 }
 
-func (r *CategoriaRepo) Create(ctx context.Context, c *domain.Categoria) error {
+func (r *CategoryRepo) Create(ctx context.Context, c *domain.Category) error {
 	return r.rep.Create(ctx, c)
 }
 
-func (r *CategoriaRepo) Update(ctx context.Context, c *domain.Categoria) error {
+func (r *CategoryRepo) Update(ctx context.Context, c *domain.Category) error {
 	return r.rep.Update(ctx, c)
 }
 
-func (r *CategoriaRepo) GetByID(ctx context.Context, id int64) (*domain.Categoria, error) {
+func (r *CategoryRepo) GetByID(ctx context.Context, id int64) (*domain.Category, error) {
 	return r.rep.GetByID(ctx, id)
 }
 
-func (r *CategoriaRepo) List(ctx context.Context, p ListParams) ([]domain.Categoria, error) {
+func (r *CategoryRepo) List(ctx context.Context, p ListParams) ([]domain.Category, error) {
 	ip := p.ToInfraListParams()
 	items, _, err := r.rep.ListWithParams(ctx, ip, nil)
 	return items, err
 }
 
-func (r *CategoriaRepo) Delete(ctx context.Context, id int64) error {
-	return r.rep.DB().WithContext(ctx).Delete(&domain.Categoria{}, id).Error
+func (r *CategoryRepo) Delete(ctx context.Context, id int64) error {
+	return r.rep.DB().WithContext(ctx).Delete(&domain.Category{}, id).Error
 }
 
-func (r *CategoriaRepo) WithTx(tx interface{}) *CategoriaRepo {
+func (r *CategoryRepo) WithTx(tx interface{}) *CategoryRepo {
 	if gdb, ok := tx.(*gorm.DB); ok {
-		return &CategoriaRepo{rep: repo.NewRepository[domain.Categoria](gdb)}
+		return &CategoryRepo{rep: repo.NewRepository[domain.Category](gdb)}
 	}
 	return r
 }
