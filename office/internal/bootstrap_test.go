@@ -29,5 +29,5 @@ func TestBootstrap_CategoryType_List(t *testing.T) {
 		t.Fatalf("List failed: %v", err)
 	}
 	// test passes if List returns without error (minimal smoke)
-	t.Logf("found %d tipo categorias", len(items))
+	t.Logf("found %d tipo categories", len(items))
 }

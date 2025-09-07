@@ -28,14 +28,14 @@ func parsePageParams(r *http.Request) (int, int) {
 }
 
 // Start launches a minimal HTTP server with two endpoints:
-// GET /categorias and GET /category_types
+// GET /categories and GET /category_types
 func Start(addr string) error {
 	catSvc, tcSvc, err := internal.Bootstrap()
 	if err != nil {
 		return err
 	}
 
-	http.HandleFunc("/categorias", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/categories", func(w http.ResponseWriter, r *http.Request) {
 		page, pageSize := parsePageParams(r)
 		items, err := catSvc.List(context.Background(), page, pageSize)
 		if err != nil {

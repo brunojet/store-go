@@ -10,19 +10,19 @@ import (
 
 type ApplicationProfileHistory struct {
 	BaseModel
-	ApplicationContactId int64 `gorm:"not null"`
-	ApplicationDetailId  int64 `gorm:"not null"`
-	ReviewAt             *time.Time
-	ProductionAt         *time.Time
-	DeactivatedAt        *time.Time
-	DeactivationCause    *string
+	ApplicationContactId int64      `gorm:"not null" json:"application_contact_id"`
+	ApplicationDetailId  int64      `gorm:"not null" json:"application_detail_id"`
+	ReviewAt             *time.Time `json:"review_at"`
+	ProductionAt         *time.Time `json:"production_at"`
+	DeactivatedAt        *time.Time `json:"deactivated_at"`
+	DeactivationCause    *string    `json:"deactivation_cause"`
 
 	//Relacionamentos
-	ApplicationContact        ApplicationContact         `gorm:"foreignKey:ApplicationContactId"`
-	ApplicationDetail         ApplicationDetail          `gorm:"foreignKey:ApplicationDetailId"`
-	Categories                []Category                 `gorm:"many2many:application_profile_history_category;joinForeignKey:ProfileID;joinReferences:CategoryID;constraint:OnUpdate:RESTRICT,OnDelete:RESTRICT"`
-	ApplicationConfigurations []ApplicationConfiguration `gorm:"many2many:application_profile_history_configuration;joinForeignKey:ProfileID;joinReferences:ApplicationId,IntegrationTypeId,TerminalModelId;constraint:OnUpdate:RESTRICT,OnDelete:RESTRICT"`
-	ApplicationCatalogs       []ApplicationCatalog       `gorm:"foreignKey:ApplicationProfileId;references:ID;constraint:OnUpdate:RESTRICT,OnDelete:RESTRICT"`
+	ApplicationContact        *ApplicationContact        `gorm:"foreignKey:ApplicationContactId" json:"application_contact"`
+	ApplicationDetail         *ApplicationDetail         `gorm:"foreignKey:ApplicationDetailId" json:"application_detail"`
+	Categories                []Category                 `gorm:"many2many:application_profile_history_category;joinForeignKey:ProfileID;joinReferences:CategoryID;constraint:OnUpdate:RESTRICT,OnDelete:RESTRICT" json:"categories"`
+	ApplicationConfigurations []ApplicationConfiguration `gorm:"many2many:application_profile_history_configuration;joinForeignKey:ProfileID;joinReferences:ApplicationId,IntegrationTypeId,TerminalModelId;constraint:OnUpdate:RESTRICT,OnDelete:RESTRICT" json:"application_configurations"`
+	ApplicationCatalogs       []ApplicationCatalog       `gorm:"foreignKey:ApplicationProfileId;references:ID;constraint:OnUpdate:RESTRICT,OnDelete:RESTRICT" json:"application_catalogs"`
 }
 
 func (ApplicationProfileHistory) TableName() string {
@@ -49,6 +49,9 @@ func (ApplicationProfileHistory) PostMigrate(db *gorm.DB) error {
 	); err != nil {
 		return err
 	}
-
+	// Índice de performance para filtragem category -> profile
+	if err := db.Exec("CREATE INDEX IF NOT EXISTS idx_aphc_category_profile ON application_profile_history_category (category_id, profile_id)").Error; err != nil {
+		return err
+	}
 	return nil
 }

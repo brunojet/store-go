@@ -7,7 +7,7 @@ type Category struct {
 
 	// Relations
 	ApplicationProfiles []ApplicationProfileHistory `gorm:"many2many:application_profile_history_category;joinForeignKey:CategoryID;joinReferences:ProfileID"`
-	CategoryType        CategoryType                `gorm:"foreignKey:CategoryTypeId" json:"category_type,omitempty"`
+	CategoryType        CategoryType                `gorm:"foreignKey:CategoryTypeId" json:"category_type"`
 	Parent              *Category                   `gorm:"foreignKey:ParentId" json:"parent,omitempty"`
 }
 

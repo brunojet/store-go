@@ -1,10 +1,10 @@
 [
     {
-        "nome": "ADQ",
-        "ativo": true
+        "name": "ADQ",
+        "active": true
     },
     {
-        "nome": "TEF",
-        "ativo": true
+        "name": "TEF",
+        "active": true
     }
 ]

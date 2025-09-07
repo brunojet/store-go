@@ -1,9 +1,9 @@
 {
-    "tipo_categoria": "Ramos",
-    "categorias": {
+    "category_type": "Ramos",
+    "categories": {
         "Varejo": {
-            "tipo_categoria": "Subramos",
-            "categorias": {
+            "category_type": "Subramos",
+            "categories": {
                 "Supermercado": {},
                 "Loja de Roupas": {},
                 "Papelaria": {},
@@ -14,8 +14,8 @@
             }
         },
         "Atacado": {
-            "tipo_categoria": "Subramos",
-            "categorias": {
+            "category_type": "Subramos",
+            "categories": {
                 "Distribuidora": {},
                 "Atacado de Alimentos": {},
                 "Atacado de Bebidas": {},
@@ -24,8 +24,8 @@
             }
         },
         "Veículos": {
-            "tipo_categoria": "Subramos",
-            "categorias": {
+            "category_type": "Subramos",
+            "categories": {
                 "Concessionária": {},
                 "Autopeças": {},
                 "Oficina": {},
@@ -34,8 +34,8 @@
             }
         },
         "Alimentação": {
-            "tipo_categoria": "Subramos",
-            "categorias": {
+            "category_type": "Subramos",
+            "categories": {
                 "Restaurante": {},
                 "Padaria": {},
                 "Lanchonete": {},
@@ -46,8 +46,8 @@
             }
         },
         "Saúde": {
-            "tipo_categoria": "Subramos",
-            "categorias": {
+            "category_type": "Subramos",
+            "categories": {
                 "Farmácia": {},
                 "Clínica": {},
                 "Laboratório": {},
@@ -56,8 +56,8 @@
             }
         },
         "Tecnologia": {
-            "tipo_categoria": "Subramos",
-            "categorias": {
+            "category_type": "Subramos",
+            "categories": {
                 "Software": {},
                 "Cloud": {},
                 "Streaming": {},
@@ -69,8 +69,8 @@
             }
         },
         "Entretenimento": {
-            "tipo_categoria": "Subramos",
-            "categorias": {
+            "category_type": "Subramos",
+            "categories": {
                 "Cinema": {},
                 "Música": {},
                 "TV": {},
@@ -81,8 +81,8 @@
             }
         },
         "Educação": {
-            "tipo_categoria": "Subramos",
-            "categorias": {
+            "category_type": "Subramos",
+            "categories": {
                 "Cursos": {},
                 "Plataforma EAD": {},
                 "Idiomas": {},
@@ -91,8 +91,8 @@
             }
         },
         "Finanças": {
-            "tipo_categoria": "Subramos",
-            "categorias": {
+            "category_type": "Subramos",
+            "categories": {
                 "Banco Digital": {},
                 "Carteira Digital": {},
                 "Pagamentos": {},
@@ -101,8 +101,8 @@
             }
         },
         "Imóveis": {
-            "tipo_categoria": "Subramos",
-            "categorias": {
+            "category_type": "Subramos",
+            "categories": {
                 "Aluguel": {},
                 "Compra": {},
                 "Venda": {},
@@ -111,8 +111,8 @@
             }
         },
         "Transporte": {
-            "tipo_categoria": "Subramos",
-            "categorias": {
+            "category_type": "Subramos",
+            "categories": {
                 "Táxi": {},
                 "Carona": {},
                 "Mobilidade": {},
@@ -122,8 +122,8 @@
             }
         },
         "Comunicação": {
-            "tipo_categoria": "Subramos",
-            "categorias": {
+            "category_type": "Subramos",
+            "categories": {
                 "Mensageria": {},
                 "Redes Sociais": {},
                 "E-mail": {},
@@ -132,8 +132,8 @@
             }
         },
         "Utilidades": {
-            "tipo_categoria": "Subramos",
-            "categorias": {
+            "category_type": "Subramos",
+            "categories": {
                 "Armazenamento": {},
                 "Backup": {},
                 "Organização": {},
@@ -142,8 +142,8 @@
             }
         },
         "Compras": {
-            "tipo_categoria": "Subramos",
-            "categorias": {
+            "category_type": "Subramos",
+            "categories": {
                 "Marketplace": {},
                 "E-commerce": {},
                 "Lojas": {},
@@ -152,8 +152,8 @@
             }
         },
         "Serviços": {
-            "tipo_categoria": "Subramos",
-            "categorias": {
+            "category_type": "Subramos",
+            "categories": {
                 "Delivery": {},
                 "Assistência": {},
                 "Consultoria": {},

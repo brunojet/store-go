@@ -1,14 +1,14 @@
 [
     {
-        "nome": "L400",
-        "ativo": true
+        "name": "L400",
+        "active": true
     },
     {
-        "nome": "S350",
-        "ativo": true
+        "name": "S350",
+        "active": true
     },
     {
-        "nome": "GPOS700",
-        "ativo": true
+        "name": "GPOS700",
+        "active": true
     }
 ]

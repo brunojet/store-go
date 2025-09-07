@@ -7,8 +7,8 @@ import (
 
 type ApplicationDetail struct {
 	BaseModel
-	Description string  `gorm:"size:255"`
-	Screenshots []Image `gorm:"many2many:application_detail_screenshots;joinForeignKey:ApplicationDetailID;joinReferences:ImageID;constraint:OnUpdate:RESTRICT,OnDelete:RESTRICT"`
+	Description string  `gorm:"size:255" json:"description"`
+	Screenshots []Image `gorm:"many2many:application_detail_screenshots;joinForeignKey:ApplicationDetailID;joinReferences:ImageID;constraint:OnUpdate:RESTRICT,OnDelete:RESTRICT" json:"screenshots"`
 }
 
 func (ApplicationDetail) TableName() string { return "application_detail" }

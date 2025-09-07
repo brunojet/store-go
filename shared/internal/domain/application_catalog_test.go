@@ -110,13 +110,13 @@ func TestApplicationCatalog_ForeignKeyEnforcement(t *testing.T) {
 	}
 
 	profile := domain.ApplicationProfileHistory{
-		ApplicationContact: domain.ApplicationContact{
+		ApplicationContact: &domain.ApplicationContact{
 			BaseEntity: domain.BaseEntity{Name: "Contato Teste"},
 			Site:       "https://site.com",
 			Email:      "contato@site.com",
 			Phone:      "11999999999",
 		},
-		ApplicationDetail: domain.ApplicationDetail{
+		ApplicationDetail: &domain.ApplicationDetail{
 			Description: "Detalhe do perfil",
 		},
 		Categories: []domain.Category{
@@ -149,7 +149,7 @@ func TestApplicationCatalog_ForeignKeyEnforcement(t *testing.T) {
 		TerminalModelId:   tm.ID,
 		Size:              123456,
 		VersionName:       "1.0.0",
-		Image: domain.Image{
+		Image: &domain.Image{
 			StorageObject: domain.StorageObject{
 				Path:     uuid.NewString(),
 				Name:     "objeto-teste",

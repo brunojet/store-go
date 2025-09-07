@@ -1,6 +1,6 @@
 {
-    "tipo_categoria": "Região",
-    "categorias": {
+    "category_type": "Região",
+    "categories": {
         "Norte": {},
         "Nordeste": {},
         "Centro-Oeste": {},
