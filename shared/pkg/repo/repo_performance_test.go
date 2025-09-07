@@ -16,6 +16,7 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+	"gorm.io/gorm/logger"
 )
 
 // Carrega um arquivo JSON de shared/testdata dado apenas o nome do arquivo
@@ -678,42 +679,76 @@ func gerarJsonAppsGenerico(
 
 func TestEntrypoint(t *testing.T) {
 	dsn := "root:p0o9i8u7@tcp(127.0.0.1:3306)/store?charset=utf8mb4&parseTime=True&loc=Local"
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{SkipDefaultTransaction: true})
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{SkipDefaultTransaction: true, Logger: logger.Default.LogMode(logger.Silent)})
 	if err != nil {
 		t.Fatalf("Erro ao inicializar o banco: %v", err)
 	}
 	// Sessão otimizada para MySQL em carga massiva
-	db = db.Session(&gorm.Session{PrepareStmt: true, CreateBatchSize: 500, SkipDefaultTransaction: true})
+	db = db.Session(&gorm.Session{PrepareStmt: true, CreateBatchSize: 2000, SkipDefaultTransaction: true})
 	// Garante migrações e índices via PostMigrate das entidades de domínio
 	if err := domain.AutoMigrate(db); err != nil {
 		t.Fatalf("Erro ao executar AutoMigrate/PostMigrate: %v", err)
 	}
 	setup := false
 	if setup {
-		CadastroCategoriesFromJSONPath(db, "regioes.json")
-		CadastroCategoriesFromJSONPath(db, "ramos_subramos.json")
-		CadastroModelosTerminalFromJSON(db)
-		CadastroTiposIntegracaoFromJSON(db)
-		CadastroApplicationsFromJSON(db)
-		CadastroConfiguraces(db)
-	}
-
-	loadVersao := true
-
-	if loadVersao {
-		// Durante a carga em massa, desligar checagem de FK acelera inserts (somente MySQL)
+		// Opcional: desabilita checagens para acelerar seed inicial
 		if db.Dialector.Name() == "mysql" {
 			_ = db.Exec("SET FOREIGN_KEY_CHECKS=0").Error
+			_ = db.Exec("SET UNIQUE_CHECKS=0").Error
+			defer db.Exec("SET UNIQUE_CHECKS=1")
+			defer db.Exec("SET FOREIGN_KEY_CHECKS=1")
+		}
+		tx := db.Begin()
+		if tx.Error != nil {
+			t.Fatalf("Erro ao iniciar transação de setup: %v", tx.Error)
+		}
+		if err := CadastroCategoriesFromJSONPath(tx, "regioes.json"); err != nil {
+			t.Fatalf("Erro no seed regioes: %v", err)
+		}
+		if err := CadastroCategoriesFromJSONPath(tx, "ramos_subramos.json"); err != nil {
+			t.Fatalf("Erro no seed ramos_subramos: %v", err)
+		}
+		if err := CadastroModelosTerminalFromJSON(tx); err != nil {
+			t.Fatalf("Erro no seed modelos: %v", err)
+		}
+		if err := CadastroTiposIntegracaoFromJSON(tx); err != nil {
+			t.Fatalf("Erro no seed tipos integracao: %v", err)
+		}
+		CadastroApplicationsFromJSON(tx)
+		CadastroConfiguraces(tx)
+		if err := tx.Commit().Error; err != nil {
+			t.Fatalf("Erro no commit do setup: %v", err)
+		}
+	}
+
+	loadVersao := false
+
+	if loadVersao {
+		// Durante a carga em massa, desligar checagem de FK/UNIQUE e agrupar em transação (somente MySQL)
+		if db.Dialector.Name() == "mysql" {
+			_ = db.Exec("SET FOREIGN_KEY_CHECKS=0").Error
+			_ = db.Exec("SET UNIQUE_CHECKS=0").Error
+			defer db.Exec("SET UNIQUE_CHECKS=1")
 			defer db.Exec("SET FOREIGN_KEY_CHECKS=1")
 		}
 		for i := 0; i < 50; i++ {
-			SolicitarCadastroApplication(db)
-			SolicitarCadastroApplicationVersionHistory(db)
-			SolicitarPublicacaoApplicationVersionHistory(db)
+			tx := db.Begin()
+			if tx.Error != nil {
+				t.Fatalf("Erro ao iniciar transação de carga: %v", tx.Error)
+			}
+			fmt.Println("Carga de aplicações, lote", i+1)
+			SolicitarCadastroApplication(tx)
+			fmt.Println("Carga de versões, lote", i+1)
+			SolicitarCadastroApplicationVersionHistory(tx)
+			fmt.Println("Carga de publicações, lote", i+1)
+			SolicitarPublicacaoApplicationVersionHistory(tx)
+			if err := tx.Commit().Error; err != nil {
+				t.Fatalf("Erro no commit da carga: %v", err)
+			}
 		}
 	}
 
-	performanceTest := false
+	performanceTest := true
 	if performanceTest {
 		var wg sync.WaitGroup
 		metricasGlobal = &MetricasExecucao{} // resetar métricas
