@@ -8,9 +8,9 @@ import (
 
 type ApplicationContact struct {
 	BaseEntity
-	Site  string `gorm:"column:site;not null"`
-	Email string `gorm:"column:email;not null"`
-	Phone string `gorm:"column:phone;not null"`
+	Site  string `gorm:"not null"`
+	Email string `gorm:"not null"`
+	Phone string `gorm:"not null"`
 }
 
 func (c *ApplicationContact) BeforeCreate(tx *gorm.DB) (err error) {

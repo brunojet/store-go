@@ -11,13 +11,13 @@ const (
 )
 
 type ApplicationCatalog struct {
-	IntegrationTypeId    int64  `gorm:"primaryKey:pk_ctlg,priority:0;autoIncrement=false;index:ak_app_ctlg_u0,priority:2;not null;column:integration_type_id"`
-	TerminalModelId      int64  `gorm:"primaryKey:pk_ctlg,priority:1;autoIncrement=false;index:ak_app_ctlg_u0,priority:3;not null;column:terminal_model_id"`
-	Stage                Stage  `gorm:"primaryKey:pk_ctlg,priority:2;autoIncrement=false;index:ak_app_ctlg_u0,priority:1;not null;column:stage;check:stage IN (0,10,20,30)"`
-	ApplicationId        int64  `gorm:"primaryKey:pk_ctlg,priority:3;autoIncrement=false;index:ak_app_ctlg_u0,priority:0;not null;column:application_id"`
-	ApplicationProfileId *int64 `gorm:"not null;column:application_profile_id"`
-	ApplicationVersionId *int64 `gorm:"not null;column:application_version_id"`
-	Ativo                *bool  `gorm:"index;default:false" json:"ativo"`
+	IntegrationTypeId    int64  `gorm:"primaryKey:pk_ctlg,priority:0;autoIncrement=false;index:ak_app_ctlg_u0,priority:2"`
+	TerminalModelId      int64  `gorm:"primaryKey:pk_ctlg,priority:1;autoIncrement=false;index:ak_app_ctlg_u0,priority:3"`
+	Stage                Stage  `gorm:"primaryKey:pk_ctlg,priority:2;autoIncrement=false;index:ak_app_ctlg_u0,priority:1;check:stage IN (0,10,20,30)"`
+	ApplicationId        int64  `gorm:"primaryKey:pk_ctlg,priority:3;autoIncrement=false;index:ak_app_ctlg_u0,priority:0"`
+	ApplicationProfileId *int64 `gorm:"not null"`
+	ApplicationVersionId *int64 `gorm:"not null"`
+	Active               *bool  `gorm:"index;default:false"`
 
 	//Relacionamentos
 	ApplicationProfile ApplicationProfileHistory `gorm:"foreignKey:ApplicationProfileId;references:ID;constraint:OnUpdate:RESTRICT,OnDelete:RESTRICT"`

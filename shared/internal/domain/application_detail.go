@@ -7,7 +7,7 @@ import (
 
 type ApplicationDetail struct {
 	BaseModel
-	Description string  `gorm:"column:description;size:255"`
+	Description string  `gorm:"size:255"`
 	Screenshots []Image `gorm:"many2many:application_detail_screenshots;joinForeignKey:ApplicationDetailID;joinReferences:ImageID;constraint:OnUpdate:RESTRICT,OnDelete:RESTRICT"`
 }
 

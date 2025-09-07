@@ -10,19 +10,20 @@ const (
 
 type ApplicationVersionHistory struct {
 	BaseEntity
-	ApplicationId     int64      `gorm:"primaryKey;column:application_id"`
-	IntegrationTypeId int64      `gorm:"primaryKey;column:integration_type_id"`
-	TerminalModelId   int64      `gorm:"primaryKey;column:terminal_model_id"`
-	Tamanho           int64      `gorm:"column:tamanho;not null"`
-	NameVersao        string     `gorm:"column:nome_versao;size:16;not null"`
-	IdImage           int64      `gorm:"column:id_img;index"`
-	PilotAt           *time.Time `gorm:"column:pilot_at;index"`
-	ProductionAt      *time.Time `gorm:"column:production_at;index"`
-	DeactivatedAt     *time.Time `gorm:"column:deactivated_at;index"`
-	DeactivationCause *string    `gorm:"column:deactivation_cause;index;size:255"`
+	ApplicationId     int64      `gorm:"primaryKey:pk_base,priority:0"`
+	IntegrationTypeId int64      `gorm:"primaryKey:pk_base,priority:1"`
+	TerminalModelId   int64      `gorm:"primaryKey:pk_base,priority:2"`
+	VersionName       string     `gorm:"not null;size:100"`
+	VersionCode       int64      `gorm:"not null"`
+	Size              int64      `gorm:"not null"`
+	ImageId           int64      `gorm:"index"`
+	PilotAt           *time.Time `gorm:"index"`
+	ProductionAt      *time.Time `gorm:"index"`
+	DeactivatedAt     *time.Time `gorm:"index"`
+	DeactivationCause *string    `gorm:"index;size:255"`
 
 	//Relacionamentos
-	Image               Image                `gorm:"foreignKey:IdImage;references:ID;constraint:OnUpdate:RESTRICT,OnDelete:RESTRICT"`
+	Image               Image                `gorm:"foreignKey:ImageId;references:ID;constraint:OnUpdate:RESTRICT,OnDelete:RESTRICT"`
 	ApplicationCatalogs []ApplicationCatalog `gorm:"foreignKey:ApplicationVersionId,ApplicationId,IntegrationTypeId,TerminalModelId;references:ID,ApplicationId,IntegrationTypeId,TerminalModelId;constraint:OnUpdate:RESTRICT,OnDelete:RESTRICT"`
 }
 

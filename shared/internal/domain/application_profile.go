@@ -10,12 +10,12 @@ import (
 
 type ApplicationProfileHistory struct {
 	BaseModel
-	ApplicationContactId int64      `gorm:"column:application_contact_id"`
-	ApplicationDetailId  int64      `gorm:"column:application_detail_id"`
-	ReviewAt             *time.Time `gorm:"column:review_at"`
-	ProductionAt         *time.Time `gorm:"column:production_at"`
-	DeactivatedAt        *time.Time `gorm:"column:deactivated_at"`
-	DeactivationCause    *string    `gorm:"column:deactivation_cause;size:255"`
+	ApplicationContactId int64 `gorm:"not null"`
+	ApplicationDetailId  int64 `gorm:"not null"`
+	ReviewAt             *time.Time
+	ProductionAt         *time.Time
+	DeactivatedAt        *time.Time
+	DeactivationCause    *string
 
 	//Relacionamentos
 	ApplicationContact        ApplicationContact         `gorm:"foreignKey:ApplicationContactId"`

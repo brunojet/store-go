@@ -147,8 +147,8 @@ func TestApplicationCatalog_ForeignKeyEnforcement(t *testing.T) {
 		ApplicationId:     app.ID,
 		IntegrationTypeId: it.ID,
 		TerminalModelId:   tm.ID,
-		Tamanho:           123456,
-		NameVersao:        "1.0.0",
+		Size:              123456,
+		VersionName:       "1.0.0",
 		Image: domain.Image{
 			StorageObject: domain.StorageObject{
 				Path:     uuid.NewString(),

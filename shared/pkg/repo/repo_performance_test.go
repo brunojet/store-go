@@ -157,7 +157,7 @@ func cadastroCategorysFromJSONRec(db *gorm.DB, root CategorysRoot, idPai *int64)
 	for nome, raw := range root.Categorys {
 		// Cadastra a categoria
 		categoria := domain.Category{
-			BaseEntity:     domain.BaseEntity{Name: nome, Ativo: true},
+			BaseEntity:     domain.BaseEntity{Name: nome, Active: true},
 			CategoryTypeId: tipoCat.ID,
 			ParentId:       idPai,
 		}
@@ -188,7 +188,7 @@ type CategorysRoot struct {
 func ensureCategoryType(db *gorm.DB, nome string) (domain.CategoryType, error) {
 	var tipo domain.CategoryType
 	if err := db.Where("nome = ?", nome).First(&tipo).Error; err != nil {
-		tipo = domain.CategoryType{BaseEntity: domain.BaseEntity{Name: nome, Ativo: true}}
+		tipo = domain.CategoryType{BaseEntity: domain.BaseEntity{Name: nome, Active: true}}
 		if err := db.Create(&tipo).Error; err != nil {
 			return tipo, err
 		}

@@ -2,11 +2,13 @@ package domain
 
 type Category struct {
 	BaseEntity
-	CategoryTypeId      int64                       `gorm:"column:category_type_id;not null;index" json:"category_type_id"`
-	CategoryType        CategoryType                `gorm:"foreignKey:CategoryTypeId" json:"category_type,omitempty"`
-	ParentId            *int64                      `gorm:"column:parent_id;index" json:"parent_id,omitempty"`
-	Parent              *Category                   `gorm:"foreignKey:ParentId" json:"parent,omitempty"`
+	CategoryTypeId int64  `gorm:"index;not null" json:"category_type_id"`
+	ParentId       *int64 `gorm:"index" json:"parent_id,omitempty"`
+
+	// Relations
 	ApplicationProfiles []ApplicationProfileHistory `gorm:"many2many:application_profile_history_category;joinForeignKey:CategoryID;joinReferences:ProfileID"`
+	CategoryType        CategoryType                `gorm:"foreignKey:CategoryTypeId" json:"category_type,omitempty"`
+	Parent              *Category                   `gorm:"foreignKey:ParentId" json:"parent,omitempty"`
 }
 
 // ;constraint:OnUpdate:RESTRICT,OnDelete:RESTRICT
