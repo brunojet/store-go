@@ -9,7 +9,7 @@ import (
 	domain_tools "github.com/brunojet/store-go/shared/internal/domain_utils"
 	"github.com/brunojet/store-go/shared/pkg/domain"
 	"github.com/google/uuid"
-	"gorm.io/driver/postgres"
+	"gorm.io/driver/mysql"
 
 	// _ "github.com/lib/pq"
 	"gorm.io/gorm"
@@ -28,12 +28,12 @@ func TestApplicationCatalog_TableName(t *testing.T) {
 func setupTestDBWithCatalog(t *testing.T) *gorm.DB {
 
 	// --- AJUSTE TEMPORÁRIO PARA USAR POSTGRES REAL ---
-	dsn := "host=localhost user=postgres password=postgres dbname=postgres port=5432 sslmode=disable search_path=store_go"
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+	dsn := "root:p0o9i8u7@tcp(127.0.0.1:3306)/store?charset=utf8mb4&parseTime=True&loc=Local"
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})
 	if err != nil {
-		t.Fatalf("Failed to connect to postgres: %v", err)
+		t.Fatalf("Failed to connect to mysql: %v", err)
 	}
 	// --- FIM DO AJUSTE TEMPORÁRIO ---
 

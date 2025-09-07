@@ -13,7 +13,7 @@ import (
 	"github.com/brunojet/store-go/shared/pkg/domain"
 	"github.com/google/uuid"
 
-	"gorm.io/driver/postgres"
+	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -677,11 +677,13 @@ func gerarJsonAppsGenerico(
 }
 
 func TestEntrypoint(t *testing.T) {
-	dsn := "host=localhost user=postgres password=postgres dbname=postgres port=5432 sslmode=disable search_path=store_go"
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	dsn := "root:p0o9i8u7@tcp(127.0.0.1:3306)/store?charset=utf8mb4&parseTime=True&loc=Local"
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{SkipDefaultTransaction: true})
 	if err != nil {
 		t.Fatalf("Erro ao inicializar o banco: %v", err)
 	}
+	// Sessão otimizada para MySQL em carga massiva
+	db = db.Session(&gorm.Session{PrepareStmt: true, CreateBatchSize: 500, SkipDefaultTransaction: true})
 	// Garante migrações e índices via PostMigrate das entidades de domínio
 	if err := domain.AutoMigrate(db); err != nil {
 		t.Fatalf("Erro ao executar AutoMigrate/PostMigrate: %v", err)
@@ -696,9 +698,14 @@ func TestEntrypoint(t *testing.T) {
 		CadastroConfiguraces(db)
 	}
 
-	loadVersao := false
+	loadVersao := true
 
 	if loadVersao {
+		// Durante a carga em massa, desligar checagem de FK acelera inserts (somente MySQL)
+		if db.Dialector.Name() == "mysql" {
+			_ = db.Exec("SET FOREIGN_KEY_CHECKS=0").Error
+			defer db.Exec("SET FOREIGN_KEY_CHECKS=1")
+		}
 		for i := 0; i < 50; i++ {
 			SolicitarCadastroApplication(db)
 			SolicitarCadastroApplicationVersionHistory(db)
@@ -706,7 +713,7 @@ func TestEntrypoint(t *testing.T) {
 		}
 	}
 
-	performanceTest := true
+	performanceTest := false
 	if performanceTest {
 		var wg sync.WaitGroup
 		metricasGlobal = &MetricasExecucao{} // resetar métricas
