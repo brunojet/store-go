@@ -49,9 +49,6 @@ func (ApplicationProfileHistory) PostMigrate(db *gorm.DB) error {
 	); err != nil {
 		return err
 	}
-	// Índice de performance para filtragem category -> profile
-	if err := db.Exec("CREATE INDEX IF NOT EXISTS idx_aphc_category_profile ON application_profile_history_category (category_id, profile_id)").Error; err != nil {
-		return err
-	}
+
 	return nil
 }
