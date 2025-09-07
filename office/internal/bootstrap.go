@@ -15,15 +15,9 @@ func Bootstrap() (*service.CategoryService, *service.CategoryTypeService, error)
 	if err != nil {
 		return nil, nil, err
 	}
-	// Executa AutoMigrate em loop para cada entidade
-	for _, entidade := range domain.EntidadesAutoMigrate {
-		if err := db.AutoMigrate(entidade); err != nil {
-			return nil, nil, err
-		}
-	}
 
 	// Executar pós-migrações para entidades que implementam PostMigratable
-	if err := domain.RunPostMigrations(db); err != nil {
+	if err := domain.AutoMigrate(db); err != nil {
 		return nil, nil, err
 	}
 

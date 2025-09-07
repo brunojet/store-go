@@ -2,9 +2,12 @@ package domain_test
 
 import (
 	// "database/sql"
+
+	"fmt"
 	"testing"
 
-	"github.com/brunojet/store-go/shared/internal/domain"
+	domain_tools "github.com/brunojet/store-go/shared/internal/domain_utils"
+	"github.com/brunojet/store-go/shared/pkg/domain"
 	"gorm.io/driver/postgres"
 
 	// _ "github.com/lib/pq"
@@ -47,35 +50,7 @@ func setupTestDBWithCatalog(t *testing.T) *gorm.DB {
 	//     t.Fatalf("Failed to connect to database: %v", err)
 	// }
 
-	err = db.AutoMigrate(&domain.ApplicationConfiguration{}, &domain.ApplicationCatalog{}, &domain.Category{}, &domain.ApplicationProfileHistory{}, &domain.ApplicationProfileHistoryCategory{}, &domain.ApplicationProfileHistoryConfiguration{})
-	if err != nil {
-		t.Fatalf("Failed to migrate: %v", err)
-	}
-
-	catalog := domain.ApplicationCatalog{}
-	err = catalog.PostMigrate(db)
-	if err != nil {
-		t.Fatalf("PostMigrate failed: %v", err)
-	}
-	// profile := domain.ApplicationProfileHistory{}
-	// err = profile.PostMigrate(db)
-	// if err != nil {
-	// 	t.Fatalf("PostMigrate failed: %v", err)
-	// }
-
-	profileCategory := domain.ApplicationProfileHistoryCategory{}
-	err = profileCategory.PostMigrate(db)
-	if err != nil {
-		t.Fatalf("PostMigrate failed: %v", err)
-	}
-
-	profileConfiguration := domain.ApplicationProfileHistoryConfiguration{}
-	err = profileConfiguration.PostMigrate(db)
-	if err != nil {
-		t.Fatalf("PostMigrate failed: %v", err)
-	}
-
-	// PRAGMAs não são necessários no Postgres
+	err = domain.AutoMigrate(db)
 
 	return db
 }
@@ -141,7 +116,7 @@ func TestApplicationCatalog_ForeignKeyEnforcement(t *testing.T) {
 			Phone:      "11999999999",
 		},
 		ApplicationDetail: domain.ApplicationDetail{
-			Descricao: "Detalhe do perfil",
+			Description: "Detalhe do perfil",
 		},
 		Categories: []domain.Category{
 			{
@@ -162,7 +137,7 @@ func TestApplicationCatalog_ForeignKeyEnforcement(t *testing.T) {
 		t.Fatalf("Failed to insert ApplicationProfileHistory: %v", err)
 	}
 	// Associa via método em lote (mesmo com 1 elemento)
-	if err := profile.AssociateApplicationConfigurations(db, []*domain.ApplicationConfiguration{&acfg}); err != nil {
+	if err := db.Model(&profile).Association("ApplicationConfigurations").Append(&acfg); err != nil {
 		t.Fatalf("Failed to associate ApplicationConfiguration(s) with profile: %v", err)
 	}
 
@@ -204,6 +179,26 @@ func TestApplicationCatalog_ForeignKeyEnforcement(t *testing.T) {
 	if err == nil {
 		t.Fatal("Expected FK violation when deleting ApplicationConfiguration, but got no error")
 	}
+
+	var loadedApp domain.Application
+	err = db.Preload("ApplicationConfigurations").
+		Preload("ApplicationConfigurations.IntegrationType").
+		Preload("ApplicationConfigurations.TerminalModel").
+		Preload("ApplicationConfigurations.ApplicationProfiles").
+		Preload("ApplicationConfigurations.ApplicationProfiles.Categories").
+		Preload("ApplicationConfigurations.ApplicationProfiles.Categories.CategoryType").
+		Preload("ApplicationConfigurations.ApplicationVersions").
+		Preload("ApplicationConfigurations.ApplicationVersions.Image").
+		First(&loadedApp, app.ID).Error
+	if err != nil {
+		t.Fatalf("Failed to recursively load Application with relations: %v", err)
+	}
+
+	b, err := domain_tools.MarshalIndentWithoutNulls(loadedApp, "", "  ")
+	if err != nil {
+		t.Fatalf("Failed to marshal loadedApp: %v", err)
+	}
+	fmt.Println(string(b))
 
 	// 3. Tentar excluir Application (deve falhar por FK)
 	err = db.Delete(&app).Error

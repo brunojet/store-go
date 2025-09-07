@@ -13,38 +13,51 @@ import (
 // Exportação das principais entidades para uso externo
 type BaseModel = infra.BaseModel
 type BaseEntity = infra.BaseEntity
-type Anexo = infra.Anexo
-type CategoryType = id.CategoryType
-type Category = id.Category
-type IntegrationType = id.IntegrationType
-type TerminalModel = id.TerminalModel
-type ApplicationContact = id.ApplicationContact
-type Application = id.Application
-type ApplicationDetail = id.ApplicationDetail
-type ApplicationConfiguration = id.ApplicationConfiguration
-type ApplicationProfileHistory = id.ApplicationProfileHistory
-type ApplicationVersion = id.ApplicationVersionHistory
-type Estagio = id.Estagio
-type ApplicationCatalog = id.ApplicationCatalog
 type StorageObject = id.StorageObject
 type Image = id.Image
-type ImageType = id.ImageType
 type Video = id.Video
+type IntegrationType = id.IntegrationType
+type TerminalModel = id.TerminalModel
+type Application = id.Application
+type CategoryType = id.CategoryType
+type Category = id.Category
+type ApplicationContact = id.ApplicationContact
+type ApplicationDetail = id.ApplicationDetail
+type ApplicationVersionHistory = id.ApplicationVersionHistory
+type ApplicationConfiguration = id.ApplicationConfiguration
+type ApplicationProfileHistory = id.ApplicationProfileHistory
+type ApplicationCatalog = id.ApplicationCatalog
+
+type ImageType = id.ImageType
 type VideoType = id.VideoType
+type Stage = id.Stage
+
+const (
+	StageDevelopment       = id.StageDevelopment
+	StageTesting           = id.StageTesting
+	StagePilot             = id.StagePilot
+	StageProduction        = id.StageProduction
+	ObjectStatusAvailable  = id.ObjectStatusAvailable
+	ObjectStatusProcessing = id.ObjectStatusProcessing
+	ObjectStatusError      = id.ObjectStatusError
+	ObjectStatusPending    = id.ObjectStatusPending
+)
 
 var EntidadesAutoMigrate = []interface{}{
-	&StorageObject{},            // base para Image, Video
-	&Image{},                    // depende de StorageObject
-	&Video{},                    // depende de StorageObject
-	&IntegrationType{},          // base para Configuracao, CatalogoApplication
-	&TerminalModel{},            // base para Configuracao, CatalogoApplication
-	&Application{},              // base para AppCategory, Configuracao, Cadastro, CatalogoApplication
-	&ApplicationConfiguration{}, // depende de IntegrationType, TerminalModel, Application
-	&ApplicationCatalog{},       // depende de ApplicationConfiguration + hook para FK
-	// &CategoryType{},              // base para Category
-	// &Category{},                  // depende de CategoryType
+	&StorageObject{},             // base para Image, Video
+	&Image{},                     // depende de StorageObject
+	&Video{},                     // depende de StorageObject
+	&IntegrationType{},           // base para Configuracao, CatalogoApplication
+	&TerminalModel{},             // base para Configuracao, CatalogoApplication
+	&Application{},               // base para ApplicationProfileHistory
+	&CategoryType{},              // base para Category
+	&Category{},                  // depende de CategoryType
+	&ApplicationContact{},        // depende de ApplicationProfileHistory
+	&ApplicationDetail{},         // depende de ApplicationProfileHistory
+	&ApplicationVersionHistory{}, // depende de Application
+	&ApplicationConfiguration{},  // depende de IntegrationType, TerminalModel, Application
 	&ApplicationProfileHistory{}, // depende de ApplicationContact, ApplicationDetail, Category, ApplicationConfiguration
-	&ApplicationVersion{},        // depende de Application
+	&ApplicationCatalog{},        // depende de ApplicationConfiguration + hook para FK
 }
 
 // PostMigratable interface para entidades que precisam de setup pós-migração
@@ -53,7 +66,7 @@ type PostMigratable interface {
 }
 
 // RunPostMigrations executa PostMigrate para todas as entidades que implementam a interface
-func RunPostMigrations(db *gorm.DB) error {
+func runPostMigrations(db *gorm.DB) error {
 	for _, entidade := range EntidadesAutoMigrate {
 		if postMigratable, ok := entidade.(PostMigratable); ok {
 			if err := postMigratable.PostMigrate(db); err != nil {
@@ -62,4 +75,14 @@ func RunPostMigrations(db *gorm.DB) error {
 		}
 	}
 	return nil
+}
+
+func AutoMigrate(db *gorm.DB) error {
+	for _, entidade := range EntidadesAutoMigrate {
+		if err := db.AutoMigrate(entidade); err != nil {
+			return err
+		}
+	}
+
+	return runPostMigrations(db)
 }

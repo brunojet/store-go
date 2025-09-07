@@ -1,10 +1,11 @@
 package domain
 
 import (
-	"strings"
 	"time"
 
 	"gorm.io/gorm"
+
+	domain_tools "github.com/brunojet/store-go/shared/internal/domain_utils"
 )
 
 type ApplicationProfileHistory struct {
@@ -19,26 +20,35 @@ type ApplicationProfileHistory struct {
 	//Relacionamentos
 	ApplicationContact        ApplicationContact         `gorm:"foreignKey:ApplicationContactId"`
 	ApplicationDetail         ApplicationDetail          `gorm:"foreignKey:ApplicationDetailId"`
-	Categories                []Category                 `gorm:"-:migration;many2many:application_profile_history_category;joinForeignKey:ID;joinReferences:CategoryID"`
-	ApplicationConfigurations []ApplicationConfiguration `gorm:"-:migration;many2many:application_profile_history_configuration;joinReferences:ID,ApplicationId,IntegrationTypeId,TerminalModelId;joinForeignKey:ID"`
+	Categories                []Category                 `gorm:"many2many:application_profile_history_category;joinForeignKey:ProfileID;joinReferences:CategoryID;constraint:OnUpdate:RESTRICT,OnDelete:RESTRICT"`
+	ApplicationConfigurations []ApplicationConfiguration `gorm:"many2many:application_profile_history_configuration;joinForeignKey:ProfileID;joinReferences:ApplicationId,IntegrationTypeId,TerminalModelId;constraint:OnUpdate:RESTRICT,OnDelete:RESTRICT"`
+	ApplicationCatalogs       []ApplicationCatalog       `gorm:"foreignKey:ApplicationProfileId;references:ID;constraint:OnUpdate:RESTRICT,OnDelete:RESTRICT"`
 }
 
 func (ApplicationProfileHistory) TableName() string {
 	return "application_profile_history"
 }
 
-// AssociateApplicationConfigurations faz associação em lote de várias ApplicationConfiguration
-func (profile *ApplicationProfileHistory) AssociateApplicationConfigurations(db *gorm.DB, cfgs []*ApplicationConfiguration) error {
-	if len(cfgs) == 0 {
-		return nil
+func (ApplicationProfileHistory) PostMigrate(db *gorm.DB) error {
+	if err := domain_tools.EnsureCascadeOnDelete(
+		db,
+		"application_profile_history_category",
+		"profile_id",
+		"application_profile_history",
+		"id",
+	); err != nil {
+		return err
 	}
-	query := "INSERT INTO application_profile_history_configuration (id, application_id, integration_type_id, terminal_model_id) VALUES "
-	vals := make([]interface{}, 0, len(cfgs)*4)
-	placeholders := make([]string, 0, len(cfgs))
-	for _, acfg := range cfgs {
-		placeholders = append(placeholders, "(?, ?, ?, ?)")
-		vals = append(vals, profile.ID, acfg.ApplicationId, acfg.IntegrationTypeId, acfg.TerminalModelId)
+
+	if err := domain_tools.EnsureCascadeOnDelete(
+		db,
+		"application_profile_history_configuration",
+		"profile_id",
+		"application_profile_history",
+		"id",
+	); err != nil {
+		return err
 	}
-	query += strings.Join(placeholders, ", ") + " ON CONFLICT DO NOTHING"
-	return db.Exec(query, vals...).Error
+
+	return nil
 }

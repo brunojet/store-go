@@ -132,24 +132,6 @@ func CadastroTiposIntegracaoFromJSON(db *gorm.DB) error {
 	return nil
 }
 
-func CadastroEstagiosFromJSON(db *gorm.DB) error {
-	data, err := LoadJSONFromTestdata("estagios_catalogo.json")
-	if err != nil {
-		return err
-	}
-	var estagios []domain.Estagio
-	if err := json.Unmarshal(data, &estagios); err != nil {
-		return err
-	}
-	for _, estagio := range estagios {
-		var existing domain.Estagio
-		if err := db.Where("nome = ?", estagio.Nome).First(&existing).Error; err != nil {
-			db.Create(&estagio)
-		}
-	}
-	return nil
-}
-
 func CadastroCategorysFromJSONPath(db *gorm.DB, relativePath string) error {
 	baseDir := "c:/Projects/store-go/shared/testdata"
 	absPath := filepath.Join(baseDir, relativePath)
@@ -265,7 +247,7 @@ func CadastroConfiguraces(db *gorm.DB) {
 				// Verifica se já existe configuração
 				var existing domain.ApplicationConfiguration
 				db.Where("application_id = ? AND terminal_model_id = ? AND integration_type_id = ?", app.ID, modelo.ID, integracao.ID).First(&existing)
-				if existing.ID == 0 {
+				if existing.ApplicationId == 0 {
 					config := domain.ApplicationConfiguration{
 						ApplicationId:     app.ID,
 						TerminalModelId:   modelo.ID,
@@ -280,7 +262,7 @@ func CadastroConfiguraces(db *gorm.DB) {
 
 func updateCadastroCategory(db *gorm.DB, categorias []domain.Category, baseModel domain.BaseModel) error {
 	// Associa múltiplas categorias ao cadastro via GORM M2M
-	cadastro := domain.HistoricoPerfilApplication{BaseModel: baseModel}
+	cadastro := domain.ApplicationProfileHistory{BaseModel: baseModel}
 	if err := db.Model(&cadastro).Association("Categorys").Append(&categorias); err != nil {
 		return err
 	}
@@ -289,7 +271,7 @@ func updateCadastroCategory(db *gorm.DB, categorias []domain.Category, baseModel
 
 func associarCategorysAoCadastro(db *gorm.DB, categorias []domain.Category, nomeApp string, baseModel domain.BaseModel) error {
 	// Busca nome do app no cadastro
-	var cadastro domain.HistoricoPerfilApplication
+	var cadastro domain.ApplicationProfileHistory
 	if err := db.Where("id = ?", baseModel.ID).First(&cadastro).Error; err != nil {
 		return err
 	}
@@ -350,8 +332,8 @@ func associarCategorysAoCadastro(db *gorm.DB, categorias []domain.Category, nome
 
 func associarConfiguracaoAoCadastro(db *gorm.DB, configuracoes []domain.ApplicationConfiguration, baseModel domain.BaseModel) error {
 	// Associa múltiplas configurações ao cadastro via GORM M2M
-	cadastro := domain.HistoricoPerfilApplication{BaseModel: baseModel}
-	if err := db.Model(&cadastro).Association("ConfiguracoesApplication").Append(&configuracoes); err != nil {
+	cadastro := domain.ApplicationProfileHistory{BaseModel: baseModel}
+	if err := db.Model(&cadastro).Association("ApplicationConfiguration").Append(&configuracoes); err != nil {
 		return err
 	}
 	return nil
@@ -377,18 +359,17 @@ func SolicitarCadastroApplication(db *gorm.DB) error {
 			return db.Select("id, nome")
 		}).Where("application_id = ?", app.ID).Find(&configuracoes)
 
-		cadastroConfig := domain.HistoricoPerfilApplication{
-			ApplicationId: app.ID,
+		cadastroConfig := domain.ApplicationProfileHistory{
 			ApplicationContact: domain.ApplicationContact{
 				BaseEntity: domain.BaseEntity{
 					Nome: app.Nome + " S.A.",
 				},
-				Email:    "ApplicationContact@" + app.Nome + ".com",
-				Telefone: "1234-5678",
-				Site:     "www." + app.Nome + ".com",
+				Email: "ApplicationContact@" + app.Nome + ".com",
+				Phone: "1234-5678",
+				Site:  "www." + app.Nome + ".com",
 			},
 			ApplicationDetail: domain.ApplicationDetail{
-				Descricao: fmt.Sprintf(
+				Description: fmt.Sprintf(
 					"Cadastro para %s",
 					app.Nome),
 			},
@@ -410,7 +391,7 @@ func SolicitarCadastroApplication(db *gorm.DB) error {
 	return nil
 }
 
-func SolicitarCadastroVersaoApplication(db *gorm.DB) error {
+func SolicitarCadastroApplicationVersionHistory(db *gorm.DB) error {
 	var apps []domain.Application
 	if err := db.Find(&apps).Error; err != nil {
 		return err
@@ -424,8 +405,8 @@ func SolicitarCadastroVersaoApplication(db *gorm.DB) error {
 			continue
 		}
 
-		var versoes []domain.VersaoApplication
-		for _, config := range cadastro.ConfiguracoesApplication {
+		var versoes []domain.ApplicationVersionHistory
+		for _, config := range cadastro.ApplicationConfigurations {
 			now := time.Now()
 			year := now.Year() % 100
 			dayOfYear := now.YearDay()
@@ -433,20 +414,21 @@ func SolicitarCadastroVersaoApplication(db *gorm.DB) error {
 			nomeVersao := fmt.Sprintf("%02d%03d%05d", year, dayOfYear, seconds)
 			tamanho := int64(rand.Intn(190)+10) * 1024 * 1024 // 10MB a 200MB
 
-			versao := domain.VersaoApplication{
-				ApplicationConfigurationId: config.ID,
-				BaseEntity:                 domain.BaseEntity{Nome: app.Nome},
-				Tamanho:                    tamanho,
-				NomeVersao:                 nomeVersao,
-				Imagem: domain.Imagem{
-					Anexo: domain.Anexo{
-						Nome:          fmt.Sprintf("Imagem da versão %s do aplicativo %s", nomeVersao, app.Nome),
-						TipoMime:      "image/png",
-						SHA256:        "d41d8cd98f00b204e9800998ecf8427e",
-						Tamanho:       2048,
-						Armazenamento: "S3",
-						Caminho:       fmt.Sprintf("apps/%d/%s/icon.png", app.ID, nomeVersao),
-						Presente:      true,
+			versao := domain.ApplicationVersionHistory{
+				ApplicationId:     app.ID,
+				IntegrationTypeId: config.IntegrationTypeId,
+				TerminalModelId:   config.TerminalModelId,
+				BaseEntity: domain.BaseEntity{
+					Nome: app.Nome,
+				},
+				Tamanho:    tamanho,
+				NomeVersao: nomeVersao,
+				Image: domain.Image{
+					StorageObject: domain.StorageObject{
+						Path:     fmt.Sprintf("apps/%d/%s/icon.png", app.ID, nomeVersao),
+						Name:     fmt.Sprintf("Imagem da versão %s do aplicativo %s", nomeVersao, app.Nome),
+						MimeType: "image/png",
+						Status:   domain.ObjectStatusAvailable,
 					},
 				},
 			}
@@ -461,25 +443,27 @@ func SolicitarCadastroVersaoApplication(db *gorm.DB) error {
 	return nil
 }
 
-func getCadastroApplication(db *gorm.DB, appID int64) (domain.HistoricoPerfilApplication, error) {
-	var cadastro domain.HistoricoPerfilApplication
+func getCadastroApplication(db *gorm.DB, appID int64) (domain.ApplicationProfileHistory, error) {
+	var cadastro domain.ApplicationProfileHistory
 	if err := db.Where("application_id = ?", appID).
 		Order("created_at desc").
-		Preload("ConfiguracoesApplication").
+		Preload("ApplicationConfiguration").
 		First(&cadastro).Error; err != nil {
-		return domain.HistoricoPerfilApplication{}, err
+		return domain.ApplicationProfileHistory{}, err
 	}
 	return cadastro, nil
 }
 
-func SolicitarPublicacaoVersaoApplication(db *gorm.DB) error {
+func SolicitarPublicacaoApplicationVersionHistory(db *gorm.DB) error {
 	var apps []domain.Application
 	if err := db.Find(&apps).Error; err != nil {
 		return err
 	}
-	var estagios []domain.Estagio
-	if err := db.Order("id ASC").Find(&estagios).Error; err != nil {
-		return err
+	stages := []domain.Stage{
+		domain.StageDevelopment,
+		domain.StageTesting,
+		domain.StagePilot,
+		domain.StageProduction,
 	}
 
 	for _, app := range apps {
@@ -489,52 +473,52 @@ func SolicitarPublicacaoVersaoApplication(db *gorm.DB) error {
 		}
 
 		// Para cada configuração do cadastro, buscar a versão mais recente e atualizar o catálogo
-		for _, config := range cadastro.ConfiguracoesApplication {
-			var versaoAtual domain.VersaoApplication
-			if err := db.Where("id_cfg_aplv = ?", config.ID).Order("created_at desc").First(&versaoAtual).Error; err != nil || versaoAtual.ID == 0 {
+		for _, config := range cadastro.ApplicationConfigurations {
+			var versaoAtual domain.ApplicationVersionHistory
+			if err := db.Where("application_id = ? AND terminal_model_id = ? AND integration_type_id = ?",
+				config.ApplicationId, config.TerminalModelId, config.IntegrationTypeId).
+				Order("created_at desc").First(&versaoAtual).Error; err != nil || versaoAtual.ID == 0 {
 				continue
 			}
 
-			var catalogos []domain.CatalogoApplication
+			var catalogs []domain.ApplicationCatalog
+			db.Where("application_id = ? AND integration_type_id = ? AND terminal_model_id = ?", config.ApplicationId, config.IntegrationTypeId, config.TerminalModelId).Order("stage DESC").Find(&catalogs)
 
-			db.Preload("Estagio").Where("id_cfg_aplv = ?", config.ID).Order("id_est DESC").Find(&catalogos)
-
-			lenCatalogos := len(catalogos)
-			lenEstagios := len(estagios)
+			lenCatalogs := len(catalogs)
+			lenStages := len(stages)
 
 			// Cria novo catálogo se ainda não percorreu todos os estágios
-			if lenCatalogos < lenEstagios {
-				novoCatalogo := domain.CatalogoApplication{
-					IdHistoricoPerfilApplication:    cadastro.ID,
-					IdConfiguracaoPerfilApplication: config.ID,
-					IdEstagio:                       estagios[lenCatalogos].ID,
-					IdVersaoApplication: func() int64 {
-						if lenCatalogos == 0 {
-							return versaoAtual.ID
-						}
-						return catalogos[0].IdVersaoApplication
-					}(),
+			if lenCatalogs < lenStages {
+				newCatalog := domain.ApplicationCatalog{
+					ApplicationId:        config.ApplicationId,
+					IntegrationTypeId:    config.IntegrationTypeId,
+					TerminalModelId:      config.TerminalModelId,
+					Stage:                stages[lenCatalogs],
+					ApplicationProfileId: &cadastro.ID,
+					ApplicationVersionId: &versaoAtual.ID,
+					Ativo:                nil,
 				}
-				if err := db.Create(&novoCatalogo).Error; err != nil {
+				if err := db.Create(&newCatalog).Error; err != nil {
 					return err
 				}
-				catalogos = append([]domain.CatalogoApplication{novoCatalogo}, catalogos...)
-				lenCatalogos++
+				catalogs = append([]domain.ApplicationCatalog{newCatalog}, catalogs...)
+				lenCatalogs++
 			}
 
 			// Avança os estágios das versões
-			for i := 0; lenCatalogos > 0 && i < lenCatalogos; i++ {
-				catalogoAtual := catalogos[i]
-				if i < lenCatalogos-1 {
-					catalogoAnterior := catalogos[i+1]
-					catalogoAtual.IdVersaoApplication = catalogoAnterior.IdVersaoApplication
-					if catalogoAtual.Estagio.Nome == "Produção" {
-						catalogoAtual.IdHistoricoPerfilApplication = cadastro.ID
+			for i := 0; lenCatalogs > 0 && i < lenCatalogs; i++ {
+				catalogAtual := catalogs[i]
+				if i < lenCatalogs-1 {
+					catalogAnterior := catalogs[i+1]
+					catalogAtual.ApplicationVersionId = catalogAnterior.ApplicationVersionId
+					// Se for produção, atualiza o profile
+					if catalogAtual.Stage == domain.StageProduction {
+						catalogAtual.ApplicationProfileId = &cadastro.ID
 					}
 				} else {
-					catalogoAtual.IdVersaoApplication = versaoAtual.ID
+					catalogAtual.ApplicationVersionId = &versaoAtual.ID
 				}
-				if err := db.Save(&catalogoAtual).Error; err != nil {
+				if err := db.Save(&catalogAtual).Error; err != nil {
 					return err
 				}
 			}
@@ -654,7 +638,7 @@ func TestEntrypoint(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Erro ao inicializar o banco: %v", err)
 	}
-	setup := false
+	setup := true
 	if setup {
 		CadastroCategorysFromJSONPath(db, "regioes.json")
 		CadastroCategorysFromJSONPath(db, "ramos_subramos.json")
@@ -662,7 +646,6 @@ func TestEntrypoint(t *testing.T) {
 		CadastroTiposIntegracaoFromJSON(db)
 		CadastroApplicationsFromJSON(db)
 		CadastroConfiguraces(db)
-		CadastroEstagiosFromJSON(db)
 	}
 
 	loadVersao := false
@@ -670,8 +653,8 @@ func TestEntrypoint(t *testing.T) {
 	if loadVersao {
 		for i := 0; i < 50; i++ {
 			SolicitarCadastroApplication(db)
-			SolicitarCadastroVersaoApplication(db)
-			SolicitarPublicacaoVersaoApplication(db)
+			SolicitarCadastroApplicationVersionHistory(db)
+			SolicitarPublicacaoApplicationVersionHistory(db)
 		}
 	}
 
