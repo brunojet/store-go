@@ -9,7 +9,7 @@ import (
 func TestContato_BeforeCreate_AllValid(t *testing.T) {
 	c := domain.ApplicationContact{
 		BaseEntity: domain.BaseEntity{
-			Nome: "Empresa X",
+			Name: "Empresa X",
 		},
 		Site:  "www.empresax.com",
 		Email: "contato@empresax.com",
@@ -24,7 +24,7 @@ func TestContato_BeforeCreate_AllValid(t *testing.T) {
 func TestContato_BeforeCreate_RazaoSocialInvalida(t *testing.T) {
 	c := domain.ApplicationContact{
 		BaseEntity: domain.BaseEntity{
-			Nome: "X",
+			Name: "X",
 		},
 		Site:  "www.empresax.com",
 		Email: "contato@empresax.com",
@@ -39,7 +39,7 @@ func TestContato_BeforeCreate_RazaoSocialInvalida(t *testing.T) {
 func TestContato_BeforeCreate_SiteInvalido(t *testing.T) {
 	c := domain.ApplicationContact{
 		BaseEntity: domain.BaseEntity{
-			Nome: "Empresa X",
+			Name: "Empresa X",
 		},
 		Site:  "x",
 		Email: "contato@empresax.com",
@@ -54,7 +54,7 @@ func TestContato_BeforeCreate_SiteInvalido(t *testing.T) {
 func TestContato_BeforeCreate_EmailInvalido(t *testing.T) {
 	c := domain.ApplicationContact{
 		BaseEntity: domain.BaseEntity{
-			Nome: "Empresa X",
+			Name: "Empresa X",
 		},
 		Site:  "www.empresax.com",
 		Email: "x",
@@ -69,7 +69,7 @@ func TestContato_BeforeCreate_EmailInvalido(t *testing.T) {
 func TestContato_BeforeCreate_PhoneInvalido(t *testing.T) {
 	c := domain.ApplicationContact{
 		BaseEntity: domain.BaseEntity{
-			Nome: "Empresa X",
+			Name: "Empresa X",
 		},
 		Site:  "www.empresax.com",
 		Email: "contato@empresax.com",

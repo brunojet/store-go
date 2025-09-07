@@ -8,6 +8,7 @@ import (
 
 	domain_tools "github.com/brunojet/store-go/shared/internal/domain_utils"
 	"github.com/brunojet/store-go/shared/pkg/domain"
+	"github.com/google/uuid"
 	"gorm.io/driver/postgres"
 
 	// _ "github.com/lib/pq"
@@ -87,9 +88,9 @@ func TestApplicationCatalog_ForeignKeyEnforcement(t *testing.T) {
 	db := setupTestDBWithCatalog(t)
 
 	// 1. Inserir dependências na ordem correta
-	app := domain.Application{BaseEntity: domain.BaseEntity{Nome: "App Teste"}}
-	it := domain.IntegrationType{BaseEntity: domain.BaseEntity{Nome: "Tipo Integracao Teste"}}
-	tm := domain.TerminalModel{BaseEntity: domain.BaseEntity{Nome: "Terminal Teste"}}
+	app := domain.Application{BaseEntity: domain.BaseEntity{Name: "App Teste"}}
+	it := domain.IntegrationType{BaseEntity: domain.BaseEntity{Name: "Tipo Integracao Teste"}}
+	tm := domain.TerminalModel{BaseEntity: domain.BaseEntity{Name: "Terminal Teste"}}
 	if err := db.Create(&app).Error; err != nil {
 		t.Fatalf("Failed to insert Application: %v", err)
 	}
@@ -110,7 +111,7 @@ func TestApplicationCatalog_ForeignKeyEnforcement(t *testing.T) {
 
 	profile := domain.ApplicationProfileHistory{
 		ApplicationContact: domain.ApplicationContact{
-			BaseEntity: domain.BaseEntity{Nome: "Contato Teste"},
+			BaseEntity: domain.BaseEntity{Name: "Contato Teste"},
 			Site:       "https://site.com",
 			Email:      "contato@site.com",
 			Phone:      "11999999999",
@@ -120,15 +121,15 @@ func TestApplicationCatalog_ForeignKeyEnforcement(t *testing.T) {
 		},
 		Categories: []domain.Category{
 			{
-				BaseEntity: domain.BaseEntity{Nome: "Categoria 1"},
+				BaseEntity: domain.BaseEntity{Name: "Categoria 1"},
 				CategoryType: domain.CategoryType{
-					BaseEntity: domain.BaseEntity{Nome: "Tipo Categoria 1"},
+					BaseEntity: domain.BaseEntity{Name: "Tipo Categoria 1"},
 				},
 			},
 			{
-				BaseEntity: domain.BaseEntity{Nome: "Categoria 2"},
+				BaseEntity: domain.BaseEntity{Name: "Categoria 2"},
 				CategoryType: domain.CategoryType{
-					BaseEntity: domain.BaseEntity{Nome: "Tipo Categoria 2"},
+					BaseEntity: domain.BaseEntity{Name: "Tipo Categoria 2"},
 				},
 			},
 		},
@@ -142,18 +143,17 @@ func TestApplicationCatalog_ForeignKeyEnforcement(t *testing.T) {
 	}
 
 	version := domain.ApplicationVersionHistory{
-		BaseEntity:        domain.BaseEntity{Nome: "Versao Teste"},
+		BaseEntity:        domain.BaseEntity{Name: "Versao Teste"},
 		ApplicationId:     app.ID,
 		IntegrationTypeId: it.ID,
 		TerminalModelId:   tm.ID,
 		Tamanho:           123456,
-		NomeVersao:        "1.0.0",
+		NameVersao:        "1.0.0",
 		Image: domain.Image{
 			StorageObject: domain.StorageObject{
-				Path:     "bucket-teste",
+				Path:     uuid.NewString(),
 				Name:     "objeto-teste",
 				MimeType: "etag-teste",
-				Status:   domain.ObjectStatusAvailable,
 			},
 		},
 	}
@@ -213,6 +213,10 @@ func TestApplicationCatalog_ForeignKeyEnforcement(t *testing.T) {
 	}
 
 	if err := db.Delete(&version).Error; err != nil {
+		t.Fatalf("Failed to delete ApplicationVersionHistory: %v", err)
+	}
+
+	if err := db.Delete(&version.Image).Error; err != nil {
 		t.Fatalf("Failed to delete ApplicationVersionHistory: %v", err)
 	}
 

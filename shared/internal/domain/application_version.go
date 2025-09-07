@@ -14,7 +14,7 @@ type ApplicationVersionHistory struct {
 	IntegrationTypeId int64      `gorm:"primaryKey;column:integration_type_id"`
 	TerminalModelId   int64      `gorm:"primaryKey;column:terminal_model_id"`
 	Tamanho           int64      `gorm:"column:tamanho;not null"`
-	NomeVersao        string     `gorm:"column:nome_versao;size:16;not null"`
+	NameVersao        string     `gorm:"column:nome_versao;size:16;not null"`
 	IdImage           int64      `gorm:"column:id_img;index"`
 	PilotAt           *time.Time `gorm:"column:pilot_at;index"`
 	ProductionAt      *time.Time `gorm:"column:production_at;index"`
@@ -22,7 +22,7 @@ type ApplicationVersionHistory struct {
 	DeactivationCause *string    `gorm:"column:deactivation_cause;index;size:255"`
 
 	//Relacionamentos
-	Image               Image                `gorm:"foreignKey:IdImage;references:ID"`
+	Image               Image                `gorm:"foreignKey:IdImage;references:ID;constraint:OnUpdate:RESTRICT,OnDelete:RESTRICT"`
 	ApplicationCatalogs []ApplicationCatalog `gorm:"foreignKey:ApplicationVersionId,ApplicationId,IntegrationTypeId,TerminalModelId;references:ID,ApplicationId,IntegrationTypeId,TerminalModelId;constraint:OnUpdate:RESTRICT,OnDelete:RESTRICT"`
 }
 

@@ -105,7 +105,7 @@ func CadastroModelosTerminalFromJSON(db *gorm.DB) error {
 	for _, be := range entidades {
 		modelo := domain.TerminalModel{BaseEntity: be}
 		var existing domain.TerminalModel
-		if err := db.Where("nome = ?", modelo.Nome).First(&existing).Error; err != nil {
+		if err := db.Where("nome = ?", modelo.Name).First(&existing).Error; err != nil {
 			db.Create(&modelo)
 		}
 	}
@@ -125,7 +125,7 @@ func CadastroTiposIntegracaoFromJSON(db *gorm.DB) error {
 	for _, be := range entidades {
 		tipo := domain.IntegrationType{BaseEntity: be}
 		var existing domain.IntegrationType
-		if err := db.Where("nome = ?", tipo.Nome).First(&existing).Error; err != nil {
+		if err := db.Where("nome = ?", tipo.Name).First(&existing).Error; err != nil {
 			db.Create(&tipo)
 		}
 	}
@@ -157,7 +157,7 @@ func cadastroCategorysFromJSONRec(db *gorm.DB, root CategorysRoot, idPai *int64)
 	for nome, raw := range root.Categorys {
 		// Cadastra a categoria
 		categoria := domain.Category{
-			BaseEntity:     domain.BaseEntity{Nome: nome, Ativo: true},
+			BaseEntity:     domain.BaseEntity{Name: nome, Ativo: true},
 			CategoryTypeId: tipoCat.ID,
 			ParentId:       idPai,
 		}
@@ -188,7 +188,7 @@ type CategorysRoot struct {
 func ensureCategoryType(db *gorm.DB, nome string) (domain.CategoryType, error) {
 	var tipo domain.CategoryType
 	if err := db.Where("nome = ?", nome).First(&tipo).Error; err != nil {
-		tipo = domain.CategoryType{BaseEntity: domain.BaseEntity{Nome: nome, Ativo: true}}
+		tipo = domain.CategoryType{BaseEntity: domain.BaseEntity{Name: nome, Ativo: true}}
 		if err := db.Create(&tipo).Error; err != nil {
 			return tipo, err
 		}
@@ -222,7 +222,7 @@ func CadastroApplicationsFromJSON(db *gorm.DB) {
 	for name := range apps {
 		var existing domain.Application
 		if err := db.Where("nome = ?", name).First(&existing).Error; err != nil {
-			app := domain.Application{BaseEntity: domain.BaseEntity{Nome: name, Ativo: true}}
+			app := domain.Application{BaseEntity: domain.BaseEntity{Name: name, Ativo: true}}
 			db.Create(&app)
 		}
 	}
@@ -298,7 +298,7 @@ func associarCategorysAoCadastro(db *gorm.DB, categorias []domain.Category, nome
 				continue
 			}
 			for _, cat := range categorias {
-				if cat.Nome == regStr {
+				if cat.Name == regStr {
 					catsToAssociate = append(catsToAssociate, cat)
 				}
 			}
@@ -307,7 +307,7 @@ func associarCategorysAoCadastro(db *gorm.DB, categorias []domain.Category, nome
 	// Associa ramo
 	if ramo, ok := appInfo["ramo"].(string); ok {
 		for _, cat := range categorias {
-			if cat.Nome == ramo {
+			if cat.Name == ramo {
 				catsToAssociate = append(catsToAssociate, cat)
 				break
 			}
@@ -316,7 +316,7 @@ func associarCategorysAoCadastro(db *gorm.DB, categorias []domain.Category, nome
 	// Associa subramo
 	if subramo, ok := appInfo["subramo"].(string); ok {
 		for _, cat := range categorias {
-			if cat.Nome == subramo {
+			if cat.Name == subramo {
 				catsToAssociate = append(catsToAssociate, cat)
 				break
 			}
@@ -362,22 +362,22 @@ func SolicitarCadastroApplication(db *gorm.DB) error {
 		cadastroConfig := domain.ApplicationProfileHistory{
 			ApplicationContact: domain.ApplicationContact{
 				BaseEntity: domain.BaseEntity{
-					Nome: app.Nome + " S.A.",
+					Name: app.Name + " S.A.",
 				},
-				Email: "ApplicationContact@" + app.Nome + ".com",
+				Email: "ApplicationContact@" + app.Name + ".com",
 				Phone: "1234-5678",
-				Site:  "www." + app.Nome + ".com",
+				Site:  "www." + app.Name + ".com",
 			},
 			ApplicationDetail: domain.ApplicationDetail{
 				Description: fmt.Sprintf(
 					"Cadastro para %s",
-					app.Nome),
+					app.Name),
 			},
 		}
 		if tx := db.Create(&cadastroConfig); tx.Error != nil {
 			return tx.Error
 		}
-		if err := associarCategorysAoCadastro(db, todasCategorys, app.Nome, cadastroConfig.BaseModel); err != nil {
+		if err := associarCategorysAoCadastro(db, todasCategorys, app.Name, cadastroConfig.BaseModel); err != nil {
 			return err
 		}
 
@@ -419,14 +419,14 @@ func SolicitarCadastroApplicationVersionHistory(db *gorm.DB) error {
 				IntegrationTypeId: config.IntegrationTypeId,
 				TerminalModelId:   config.TerminalModelId,
 				BaseEntity: domain.BaseEntity{
-					Nome: app.Nome,
+					Name: app.Name,
 				},
 				Tamanho:    tamanho,
-				NomeVersao: nomeVersao,
+				NameVersao: nomeVersao,
 				Image: domain.Image{
 					StorageObject: domain.StorageObject{
 						Path:     fmt.Sprintf("apps/%d/%s/icon.png", app.ID, nomeVersao),
-						Name:     fmt.Sprintf("Imagem da versão %s do aplicativo %s", nomeVersao, app.Nome),
+						Name:     fmt.Sprintf("Imagem da versão %s do aplicativo %s", nomeVersao, app.Name),
 						MimeType: "image/png",
 						Status:   domain.ObjectStatusAvailable,
 					},
@@ -607,7 +607,7 @@ func gerarJsonAppsGenerico(
 				if err != nil {
 					return err
 				}
-				fileName := fmt.Sprintf(fileNameFmt, regiao.Nome, modelo.Nome, integracao.Nome)
+				fileName := fmt.Sprintf(fileNameFmt, regiao.Name, modelo.Name, integracao.Name)
 				file, err := os.Create(fileName)
 				if err != nil {
 					return err
@@ -622,7 +622,7 @@ func gerarJsonAppsGenerico(
 				totalItems += len(apps)
 				totalQueries++
 				times = append(times, duracao)
-				//fmt.Printf("%s %s, Modelo %s, Integracao %s: %d itens, consulta e exportacao demorou %d ms\n", logPrefix, regiao.Nome, modelo.Nome, integracao.Nome, len(apps), duracao)
+				//fmt.Printf("%s %s, Modelo %s, Integracao %s: %d itens, consulta e exportacao demorou %d ms\n", logPrefix, regiao.Name, modelo.Name, integracao.Name, len(apps), duracao)
 			}
 		}
 	}

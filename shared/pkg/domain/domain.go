@@ -5,14 +5,13 @@ package domain
 // importing internal packages directly.
 
 import (
-	infra "github.com/brunojet/infra-go/pkg/domain"
 	id "github.com/brunojet/store-go/shared/internal/domain"
 	"gorm.io/gorm"
 )
 
 // Exportação das principais entidades para uso externo
-type BaseModel = infra.BaseModel
-type BaseEntity = infra.BaseEntity
+type BaseModel = id.BaseModel
+type BaseEntity = id.BaseEntity
 type StorageObject = id.StorageObject
 type Image = id.Image
 type Video = id.Video

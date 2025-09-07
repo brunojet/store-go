@@ -14,7 +14,7 @@ type ApplicationContact struct {
 }
 
 func (c *ApplicationContact) BeforeCreate(tx *gorm.DB) (err error) {
-	if len(c.Nome) < 3 {
+	if len(c.Name) < 3 {
 		return errors.New("name deve ter pelo menos 3 caracteres")
 	}
 	if len(c.Site) < 3 {
