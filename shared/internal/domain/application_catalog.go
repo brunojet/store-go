@@ -21,7 +21,7 @@ type ApplicationCatalog struct {
 
 	//Relacionamentos
 	ApplicationProfile *ApplicationProfileHistory `gorm:"foreignKey:ApplicationProfileId;references:ID;constraint:OnUpdate:RESTRICT,OnDelete:RESTRICT" json:"application_profile,omitempty"`
-	ApplicationVersion *ApplicationVersionHistory `gorm:"foreignKey:ApplicationVersionId,ApplicationId,IntegrationTypeId,TerminalModelId;references:ID,ApplicationId,IntegrationTypeId,TerminalModelId;constraint:OnUpdate:RESTRICT,OnDelete:RESTRICT" json:"application_version,omitempty"`
+	ApplicationVersion *ApplicationVersionHistory `gorm:"foreignKey:ApplicationVersionId;references:ID;constraint:OnUpdate:RESTRICT,OnDelete:RESTRICT" json:"application_version,omitempty"`
 }
 
 func (ApplicationCatalog) TableName() string { return ApplicationCatalogTableName }

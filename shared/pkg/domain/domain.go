@@ -53,8 +53,8 @@ var EntidadesAutoMigrate = []interface{}{
 	&Category{},                  // depende de CategoryType
 	&ApplicationContact{},        // depende de ApplicationProfileHistory
 	&ApplicationDetail{},         // depende de ApplicationProfileHistory
-	&ApplicationVersionHistory{}, // depende de Application
 	&ApplicationConfiguration{},  // depende de IntegrationType, TerminalModel, Application
+	&ApplicationVersionHistory{}, // depende de ApplicationConfiguration + Application
 	&ApplicationProfileHistory{}, // depende de ApplicationContact, ApplicationDetail, Category, ApplicationConfiguration
 	&ApplicationCatalog{},        // depende de ApplicationConfiguration + hook para FK
 }

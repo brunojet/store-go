@@ -53,6 +53,10 @@ func setupTestDBWithCatalog(t *testing.T) *gorm.DB {
 
 	err = domain.AutoMigrate(db)
 
+	if err != nil {
+		t.Fatalf("AutoMigrate failed: %v", err)
+	}
+
 	return db
 }
 
