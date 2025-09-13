@@ -6,9 +6,9 @@ type Category struct {
 	ParentId       *int64 `gorm:"index" json:"parent_id,omitempty"`
 
 	// Relations
-	ApplicationProfiles []ApplicationProfileHistory `gorm:"many2many:application_profile_history_category;joinForeignKey:CategoryID;joinReferences:ProfileID"`
-	CategoryType        CategoryType                `gorm:"foreignKey:CategoryTypeId" json:"category_type"`
-	Parent              *Category                   `gorm:"foreignKey:ParentId" json:"parent,omitempty"`
+	ApplicationProfiles *[]ApplicationProfileHistory `gorm:"many2many:application_profile_history_category;joinForeignKey:CategoryID;joinReferences:ProfileID" json:"application_profiles,omitempty"`
+	CategoryType        *CategoryType                `gorm:"foreignKey:CategoryTypeId" json:"category_type,omitempty"`
+	Parent              *Category                    `gorm:"foreignKey:ParentId" json:"parent,omitempty"`
 }
 
 // ;constraint:OnUpdate:RESTRICT,OnDelete:RESTRICT
