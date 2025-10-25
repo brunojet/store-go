@@ -19,7 +19,7 @@ func (p *ListParams) Normalize() {
 	}
 }
 
-func (p *ListParams) ToInfraListParams() *repo.ListParams {
+func (p *ListParams) ToInfraParams() *repo.ListParams {
 	p.Normalize()
 	ip := repo.ListParams{
 		Offset:      (p.Page - 1) * p.PageSize,

@@ -30,7 +30,7 @@ func NewCategoryTypeRepo(db *gorm.DB) *CategoryTypeRepo {
 }
 
 func (r *CategoryTypeRepo) List(ctx context.Context, p ListParams) ([]domain.CategoryType, error) {
-	ip := p.ToInfraListParams()
+	ip := p.ToInfraParams()
 	items, _, err := r.Repository.ListWithParams(ctx, ip, nil)
 	return items, err
 }

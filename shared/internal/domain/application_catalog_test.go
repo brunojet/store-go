@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/brunojet/store-go/shared/internal/domain"
 	domain_tools "github.com/brunojet/store-go/shared/internal/domain_utils"
-	"github.com/brunojet/store-go/shared/pkg/domain"
+	pdomain "github.com/brunojet/store-go/shared/pkg/domain"
 	"github.com/google/uuid"
 	"gorm.io/driver/mysql"
 
@@ -51,7 +52,8 @@ func setupTestDBWithCatalog(t *testing.T) *gorm.DB {
 	//     t.Fatalf("Failed to connect to database: %v", err)
 	// }
 
-	err = domain.AutoMigrate(db)
+	// Use the public AutoMigrate re-export which composes internal entities
+	err = pdomain.AutoMigrate(db)
 
 	if err != nil {
 		t.Fatalf("AutoMigrate failed: %v", err)
@@ -72,10 +74,10 @@ func TestApplicationCatalog_StageConstants(t *testing.T) {
 		expected domain.Stage
 		name     string
 	}{
-		{domain.StageDevelopment, 0, "StageDevelopment"},
-		{domain.StageTesting, 10, "StageTesting"},
-		{domain.StagePilot, 20, "StagePilot"},
-		{domain.StageProduction, 30, "StageProduction"},
+		{domain.StageDevelopment, 10, "StageDevelopment"},
+		{domain.StageTesting, 20, "StageTesting"},
+		{domain.StagePilot, 30, "StagePilot"},
+		{domain.StageProduction, 40, "StageProduction"},
 	}
 
 	for _, tt := range tests {
@@ -126,13 +128,13 @@ func TestApplicationCatalog_ForeignKeyEnforcement(t *testing.T) {
 		Categories: []domain.Category{
 			{
 				BaseEntity: domain.BaseEntity{Name: "Categoria 1"},
-				CategoryType: domain.CategoryType{
+				CategoryType: &domain.CategoryType{
 					BaseEntity: domain.BaseEntity{Name: "Tipo Categoria 1"},
 				},
 			},
 			{
 				BaseEntity: domain.BaseEntity{Name: "Categoria 2"},
-				CategoryType: domain.CategoryType{
+				CategoryType: &domain.CategoryType{
 					BaseEntity: domain.BaseEntity{Name: "Tipo Categoria 2"},
 				},
 			},
