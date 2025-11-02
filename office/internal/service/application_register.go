@@ -44,3 +44,7 @@ func (s *ApplicationService) List(ctx context.Context, page, pageSize int) ([]dt
 	}
 	return result, nil
 }
+
+func (s *ApplicationService) Delete(ctx context.Context, id int64) error {
+	return s.repo.Delete(ctx, id)
+}
