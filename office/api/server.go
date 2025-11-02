@@ -30,7 +30,7 @@ func parsePageParams(r *http.Request) (int, int) {
 // Start launches a minimal HTTP server with two endpoints:
 // GET /categories and GET /category_types
 func Start(addr string) error {
-	catSvc, tcSvc, err := internal.Bootstrap()
+	catSvc, tcSvc, appsSvc, err := internal.Bootstrap()
 	if err != nil {
 		return err
 	}
@@ -49,6 +49,17 @@ func Start(addr string) error {
 	http.HandleFunc("/category_types", func(w http.ResponseWriter, r *http.Request) {
 		page, pageSize := parsePageParams(r)
 		items, err := tcSvc.List(context.Background(), page, pageSize)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(items)
+	})
+
+	http.HandleFunc("/apps", func(w http.ResponseWriter, r *http.Request) {
+		page, pageSize := parsePageParams(r)
+		items, err := appsSvc.List(context.Background(), page, pageSize)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

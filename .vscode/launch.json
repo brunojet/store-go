@@ -1,0 +1,39 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug office/cmd",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/office/cmd",
+            "console": "integratedTerminal",
+            "env": {
+                "STORE_DSN": "root:p0o9i8u7@tcp(127.0.0.1:3306)/store?parseTime=true&loc=Local"
+            }
+        },
+        {
+            "name": "Debug store/cmd",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/store/cmd",
+            "console": "integratedTerminal",
+            "env": {
+                "STORE_DSN": "root:p0o9i8u7@tcp(127.0.0.1:3306)/store?parseTime=true&loc=Local"
+            }
+        },
+        {
+            "name": "Attach to Delve",
+            "type": "go",
+            "request": "attach",
+            "mode": "remote",
+            "remotePath": "",
+            "port": 2345,
+            "host": "127.0.0.1"
+        }
+    ]
+}

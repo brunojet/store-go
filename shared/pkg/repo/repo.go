@@ -5,7 +5,6 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/brunojet/store-go/shared/internal/repo"
 	internal "github.com/brunojet/store-go/shared/internal/repo"
 	"github.com/brunojet/store-go/shared/pkg/domain"
 )
@@ -28,7 +27,13 @@ type CategoryTypeRepository interface {
 	Delete(ctx context.Context, id int64) error
 }
 
-type ApplicationRepository repo.ApplicationRepo
+type ApplicationRepository interface {
+	Create(ctx context.Context, c *domain.Application) error
+	Update(ctx context.Context, c *domain.Application) error
+	GetByID(ctx context.Context, id int64) (*domain.Application, error)
+	List(ctx context.Context, p ListParams) ([]domain.Application, error)
+	Delete(ctx context.Context, id int64) error
+}
 
 func NewCategoryRepo(db *gorm.DB) CategoryRepository {
 	return internal.NewCategoryRepo(db)
@@ -36,4 +41,8 @@ func NewCategoryRepo(db *gorm.DB) CategoryRepository {
 
 func NewCategoryTypeRepo(db *gorm.DB) CategoryTypeRepository {
 	return internal.NewCategoryTypeRepo(db)
+}
+
+func NewApplicationRepo(db *gorm.DB) ApplicationRepository {
+	return internal.NewApplicationRepo(db)
 }

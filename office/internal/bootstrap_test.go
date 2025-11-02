@@ -6,7 +6,7 @@ import (
 )
 
 func TestBootstrap_CategoryType_List(t *testing.T) {
-	catSvc, tcSvc, err := Bootstrap()
+	catSvc, tcSvc, _, err := Bootstrap()
 	if err != nil {
 		t.Fatalf("bootstrap failed: %v", err)
 	}

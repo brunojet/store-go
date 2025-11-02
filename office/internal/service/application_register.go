@@ -31,16 +31,15 @@ func (s *ApplicationService) Update(ctx context.Context, id int64, dto *dto.Appl
 	return s.repo.Update(ctx, dto.ToDomain((id)))
 }
 
-func (s *ApplicationService) List(ctx context.Context, p repo.ListParams) ([]dto.Application, error) {
-	// Convert shared ListParams to infra-go ListParams and call ListWithParams
-	ip := p.ToInfraParams()
+func (s *ApplicationService) List(ctx context.Context, page, pageSize int) ([]dto.Application, error) {
+	params := repo.ListParams{Page: page, PageSize: pageSize}
 
-	categories, _, err := s.repo.ListWithParams(ctx, ip, nil)
+	applications, err := s.repo.List(ctx, params)
 	if err != nil {
 		return nil, err
 	}
-	result := make([]dto.Application, len(categories))
-	for i, c := range categories {
+	result := make([]dto.Application, len(applications))
+	for i, c := range applications {
 		result[i] = dto.Application(c)
 	}
 	return result, nil
